@@ -1,8 +1,8 @@
-import { initTRPC } from '@trpc/server';
-import { z } from 'zod';
-import { Context } from './context';
+import { initTRPC } from '@trpc/server'
+import { z } from 'zod'
+import { Context } from './context'
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create()
 
 export const appRouter = t.router({
   // Health check procedure
@@ -10,13 +10,13 @@ export const appRouter = t.router({
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-    };
+    }
   }),
 
   // Example: Get all users
   getUsers: t.procedure.query(async ({ ctx }) => {
-    const users = await ctx.prisma.user.findMany();
-    return users;
+    const users = await ctx.prisma.user.findMany()
+    return users
   }),
 
   // Example: Create a user
@@ -33,19 +33,17 @@ export const appRouter = t.router({
           email: input.email,
           name: input.name,
         },
-      });
-      return user;
+      })
+      return user
     }),
 
   // Example: Get user by ID
-  getUserById: t.procedure
-    .input(z.string())
-    .query(async ({ ctx, input }) => {
-      const user = await ctx.prisma.user.findUnique({
-        where: { id: input },
-      });
-      return user;
-    }),
-});
+  getUserById: t.procedure.input(z.string()).query(async ({ ctx, input }) => {
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: input },
+    })
+    return user
+  }),
+})
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = typeof appRouter

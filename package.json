@@ -8,6 +8,7 @@
     "dev:server": "npm run dev --workspace=server",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "typecheck": "tsc",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {

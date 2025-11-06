@@ -2,11 +2,15 @@
   "name": "mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "check-types": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -29,7 +33,11 @@
     "react-native-web": "~0.21.0"
   },
   "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
     "@types/react": "~19.1.10",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },

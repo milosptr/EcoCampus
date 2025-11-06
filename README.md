@@ -19,6 +19,7 @@ Before you start, make sure you have the following installed on your computer:
 ### 1. Install Node.js
 
 **Check if you have Node.js:**
+
 ```bash
 node --version
 ```
@@ -31,6 +32,7 @@ If you don't have Node.js installed:
   - Restart your terminal after installation
 
 After installation, verify it works:
+
 ```bash
 node --version
 npm --version
@@ -49,6 +51,7 @@ Follow these steps to run the project on your local machine:
 ### Step 1: Clone or Download the Project
 
 If you have Git:
+
 ```bash
 git clone <repository-url>
 cd EcoCampus
@@ -96,12 +99,14 @@ npm run dev
 ```
 
 This will start:
+
 - **Server** at `http://localhost:3000`
 - **Mobile app** with Expo
 
 ### Option 2: Run Individually
 
 **Terminal 1 - Start the Server:**
+
 ```bash
 cd apps/server
 npm run dev
@@ -110,12 +115,14 @@ npm run dev
 The server will start at `http://localhost:3000`
 
 **Terminal 2 - Start the Mobile App:**
+
 ```bash
 cd apps/mobile
 npm start
 ```
 
 Follow the Expo instructions to:
+
 - Press `i` for iOS simulator (Mac only)
 - Press `a` for Android emulator
 - Scan QR code with Expo Go app on your phone
@@ -125,11 +132,13 @@ Follow the Expo instructions to:
 Once the server is running, you can test it:
 
 **Health Check:**
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 **View Database (Prisma Studio):**
+
 ```bash
 cd apps/server
 npm run db:studio
@@ -203,11 +212,13 @@ npm run web
 If you get an error that port 3000 is already in use:
 
 **On Mac/Linux:**
+
 ```bash
 lsof -ti:3000 | xargs kill -9
 ```
 
 **On Windows:**
+
 ```bash
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
@@ -216,6 +227,7 @@ taskkill /PID <PID> /F
 ### Module Not Found
 
 If you see "module not found" errors:
+
 ```bash
 # Clean install
 rm -rf node_modules
@@ -226,6 +238,7 @@ npm install
 ### Prisma Issues
 
 If you have database issues:
+
 ```bash
 cd apps/server
 npx prisma generate
@@ -235,6 +248,7 @@ npx prisma db push
 ### Expo Issues
 
 If Expo won't start:
+
 ```bash
 cd apps/mobile
 rm -rf node_modules
@@ -245,12 +259,14 @@ npm start -- --clear
 ## Project Technology Stack
 
 ### Mobile App (apps/mobile)
+
 - **Expo** - React Native framework
 - **React Native** - Mobile app development
 - **Expo Router** - File-based routing
 - **TypeScript** - Type safety
 
 ### Server (apps/server)
+
 - **Node.js** - JavaScript runtime
 - **Express** - Web framework
 - **tRPC** - Type-safe APIs
@@ -259,6 +275,7 @@ npm start -- --clear
 - **TypeScript** - Type safety
 
 ### Monorepo
+
 - **Turborepo** - Monorepo build system
 - **npm workspaces** - Package management
 
