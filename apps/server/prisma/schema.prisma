@@ -6,15 +6,135 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Example model - customize for your needs
+model University {
+  id                   String                @id @default(cuid())
+  name                 String
+  code                 String                @unique
+  description          String?
+  students             User[]
+  actionLogs           ActionLog[]
+  leaderboardSnapshots LeaderboardSnapshot[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  hashedPassword     String?
+  fullName           String?
+  universityId       String?
+  university         University?          @relation(fields: [universityId], references: [id])
+  profile            UserProfile?
+  actionLogs         ActionLog[]
+  onboardingSessions OnboardingSession[]
+  streak             UserStreak?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model OnboardingSession {
+  id               String   @id @default(cuid())
+  email            String
+  universityCode   String
+  verificationCode String
+  expiresAt        DateTime
+  completedAt      DateTime?
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([email])
+  @@index([verificationCode])
+}
+
+model UserProfile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  displayName          String?
+  avatarUrl            String?
+  bio                  String?
+  preferences          Json?
+  notificationsEnabled Boolean  @default(true)
+  timezone             String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  user                 User     @relation(fields: [userId], references: [id])
+}
+
+model ActionCategory {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  title         String
+  description   String?
+  defaultPoints Int              @default(50)
+  actions       ActionTemplate[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model ActionTemplate {
+  id          String          @id @default(cuid())
+  categoryId  String
+  category    ActionCategory  @relation(fields: [categoryId], references: [id])
+  title       String
+  description String?
+  points      Int             @default(50)
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  logs        ActionLog[]
+}
+
+model ActionLog {
+  id            String          @id @default(cuid())
+  userId        String
+  actionId      String
+  universityId  String?
+  pointsAwarded Int             @default(0)
+  occurredAt    DateTime        @default(now())
+  metadata      Json?
+  createdAt     DateTime        @default(now())
+  user          User            @relation(fields: [userId], references: [id])
+  action        ActionTemplate  @relation(fields: [actionId], references: [id])
+  university    University?     @relation(fields: [universityId], references: [id])
+
+  @@index([userId, occurredAt])
+  @@index([universityId, occurredAt])
+}
+
+enum LeaderboardRange {
+  DAILY
+  WEEKLY
+  MONTHLY
+  SEMESTER
+}
+
+model LeaderboardSnapshot {
+  id           String           @id @default(cuid())
+  universityId String
+  range        LeaderboardRange
+  periodStart  DateTime
+  periodEnd    DateTime
+  totalPoints  Int              @default(0)
+  rank         Int?
+  createdAt    DateTime         @default(now())
+  university   University       @relation(fields: [universityId], references: [id])
+
+  @@unique([universityId, range, periodStart, periodEnd])
+}
+
+model UserStreak {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  currentStreakDays Int      @default(0)
+  longestStreakDays Int      @default(0)
+  lastActionAt      DateTime?
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id])
 }
