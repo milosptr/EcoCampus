@@ -6,10 +6,10 @@ export default function SettingsScreen() {
     <SafeAreaView style={{ flex: 1 }}>
       <YStack flex={1} background='$background' p='$4' space='$4'>
         <Text color='$color' fontSize='$8' fontWeight='700'>
-          Settings
+          Profile
         </Text>
         <Text color='$color' fontSize='$5'>
-          Welcome to the settings!
+          Welcome to the profile!
         </Text>
       </YStack>
     </SafeAreaView>
