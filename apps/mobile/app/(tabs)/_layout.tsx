@@ -1,14 +1,15 @@
 import React from 'react'
-import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { Tabs } from 'expo-router'
 import { useTheme } from 'tamagui'
+import { Feather } from '@expo/vector-icons'
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name']
+  name: React.ComponentProps<typeof Feather>['name']
   color: string
+  size?: number
 }) {
-  return <FontAwesome size={28} {...props} />
+  const { size = 24, ...rest } = props
+  return <Feather size={size} {...rest} />
 }
 
 export default function TabLayout() {
@@ -17,45 +18,46 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: theme.tabIconSelected?.get(),
         tabBarInactiveTintColor: theme.tabIconDefault?.get(),
-        headerShown: false,
-        tabBarStyle: {
-          marginBottom: -3,
-        },
+        tabBarStyle: { marginBottom: -3 },
       }}
     >
       <Tabs.Screen
-        name='index'
+        name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }) => <TabBarIcon name='home' color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name='personal-progress/index'
-        options={{
-          title: 'Personal Progress',
-          tabBarIcon: ({ color }) => <TabBarIcon name='leaf' color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name='leaderboard/index'
-        options={{
-          title: 'Leaderboard',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name='bar-chart' color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name='profile/index'
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <TabBarIcon name='user' color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
 
+      <Tabs.Screen
+        name="personal-progress/index"
+        options={{
+          title: 'Personal Progress',
+          tabBarIcon: ({ color }) => <TabBarIcon name="feather" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="leaderboard/index"
+        options={{
+          title: 'Leaderboard',
+          // Feather hat "bar-chart-2" (nicht "bar-chart")
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="bar-chart-2" color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile/index"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
     </Tabs>
   )
 }

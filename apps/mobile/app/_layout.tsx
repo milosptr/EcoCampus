@@ -60,8 +60,9 @@ function RootLayoutNav() {
       defaultTheme={colorScheme ?? 'light'}
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="profile/settings" options={{ headerShown: false }} />
         </Stack>
       </ThemeProvider>
     </TamaguiProvider>

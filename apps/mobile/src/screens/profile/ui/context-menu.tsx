@@ -1,0 +1,19 @@
+// Context menus are not common in React Native
+// Using dropdown menu as fallback
+export {
+  DropdownMenu as ContextMenu,
+  DropdownMenuTrigger as ContextMenuTrigger,
+  DropdownMenuContent as ContextMenuContent,
+  DropdownMenuItem as ContextMenuItem,
+  DropdownMenuCheckboxItem as ContextMenuCheckboxItem,
+  DropdownMenuRadioItem as ContextMenuRadioItem,
+  DropdownMenuLabel as ContextMenuLabel,
+  DropdownMenuSeparator as ContextMenuSeparator,
+  DropdownMenuShortcut as ContextMenuShortcut,
+  DropdownMenuGroup as ContextMenuGroup,
+  DropdownMenuPortal as ContextMenuPortal,
+  DropdownMenuSub as ContextMenuSub,
+  DropdownMenuSubContent as ContextMenuSubContent,
+  DropdownMenuSubTrigger as ContextMenuSubTrigger,
+  DropdownMenuRadioGroup as ContextMenuRadioGroup,
+} from "./dropdown-menu";

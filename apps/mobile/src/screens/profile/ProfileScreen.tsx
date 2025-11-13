@@ -1,17 +1,169 @@
-import { YStack, Text } from 'tamagui'
-import { SafeAreaView } from 'react-native-safe-area-context'
+// 📄 screens/profile/ProfileScreen.tsx
 
-export default function SettingsScreen() {
+import React, { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { ScrollView } from 'react-native'
+import { YStack } from 'tamagui'
+import { useRouter, type Href } from 'expo-router'
+
+
+
+
+// 🔹 Diese Komponenten kommen aus deinem components-Ordner:
+import { ProfileHeader } from './components/ProfileHeader'
+import { ProfileImageUploadDialog } from './components/ProfileImageUploadDialog'
+import { InfoList } from './components/InfoList'
+import { SettingsList } from './components/SettingsList'
+import { ImpactCard } from './components/ImpactCard'
+
+// Falls du Modals brauchst (z. B. beim Button-Klick im ProfileHeader):
+import { EditModal } from './components/EditModal'
+import { DeleteAccountModal } from './components/DeleteAccountModal'
+
+export default function ProfileScreen() {
+  // State for modals and user data
+  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [editField, setEditField] = useState('')
+  const [editValue, setEditValue] = useState('')
+
+  // Mock user data - replace with actual data from your state management
+  const [userData, setUserData] = useState({
+    userName: 'Maria Klein',
+    university: 'TU Munich',
+    ecoLevel: 5,
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+    fullName: 'Maria Klein',
+    age: '22',
+    gender: 'Female',
+    distance: '5 km',
+    transport: 'Bike'
+  })
+
+  const [settings, setSettings] = useState({
+    dailyReminders: true,
+    weeklyReports: true,
+    leaderboardUpdates: false,
+    dataSharing: true,
+    analyticsTracking: false
+  })
+
+  const handleEditField = (field: string, value: string) => {
+    setEditField(field)
+    setEditValue(value)
+    setIsEditModalOpen(true)
+  }
+
+  const handleSaveEdit = (value: string) => {
+    setUserData({ ...userData, [editField]: value })
+    setIsEditModalOpen(false)
+  }
+
+  const handleImageUpload = (imageUrl: string) => {
+    setUserData({ ...userData, avatarUrl: imageUrl })
+  }
+
+  const handleToggleSetting = (key: string, value: boolean) => {
+    setSettings({ ...settings, [key]: value })
+  }
+
+  const router = useRouter()
+
+const handleNavigate = (screen: string) => {
+  router.push(screen as Href)
+}
+
+
+
+
+  const handleDeleteAccount = () => {
+    console.log('Account deleted')
+    setIsDeleteModalOpen(false)
+  }
+
+  const infoItems = [
+    { label: 'Full Name', value: userData.fullName, field: 'fullName' },
+    { label: 'Age', value: userData.age, field: 'age' },
+    { label: 'Gender', value: userData.gender, field: 'gender' },
+    { label: 'Distance from Campus', value: userData.distance, field: 'distance' },
+    { label: 'Primary Transport Mode', value: userData.transport, field: 'transport' }
+  ]
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <YStack flex={1} background='$background' p='$4' space='$4'>
-        <Text color='$color' fontSize='$8' fontWeight='700'>
-          Profile
-        </Text>
-        <Text color='$color' fontSize='$5'>
-          Welcome to the profile!
-        </Text>
-      </YStack>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F9F2' }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'flex-start',
+          paddingVertical: 24,
+          paddingHorizontal: 16,
+          minHeight: '100%',
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+      >
+
+        <YStack
+          {...({
+            width: '100%',
+            maxWidth: 600, // verhindert zu breite Darstellung auf Tablets
+            alignSelf: 'center',
+            gap: '$4',
+            minHeight: '100%',
+          } as any)}
+        >
+
+          {/* 🔹 Profilkopf mit Bild, Name, evtl. Bearbeiten-Button */}
+          <ProfileHeader
+            onBack={() => console.log('Back')}
+            onSettings={() => router.push('/profile/settings' as const)}
+            onEdit={() => handleEditField('fullName', userData.fullName)}
+            onAvatarClick={() => setIsImageUploadOpen(true)}
+            userName={userData.userName}
+            university={userData.university}
+            ecoLevel={userData.ecoLevel}
+            avatarUrl={userData.avatarUrl}
+          />
+
+          {/* 🔹 Übersicht mit allgemeinen Infos (z. B. Name, E-Mail, etc.) */}
+          <InfoList items={infoItems} onEditField={handleEditField} />
+
+          {/* 🔹 Kleine Zusammenfassung, z. B. Punkte, Fortschritt */}
+          <ImpactCard
+            co2Saved="42 kg"
+            actionsLogged="156"
+            leaderboardRank="#12 in TU Munich"
+            progressValue={75}
+            onViewProgress={() => router.push('/(tabs)/personal-progress' as const)}
+          />
+
+
+
+          {/* 🔹 Modals (werden nur angezeigt, wenn aktiv) */}
+          <ProfileImageUploadDialog
+            isOpen={isImageUploadOpen}
+            onClose={() => setIsImageUploadOpen(false)}
+            onUpload={handleImageUpload}
+            currentImage={userData.avatarUrl}
+          />
+
+          <EditModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            field={editField}
+            currentValue={editValue}
+            onSave={handleSaveEdit}
+          />
+
+          <DeleteAccountModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onConfirm={handleDeleteAccount}
+          />
+        </YStack>
+      </ScrollView>
     </SafeAreaView>
   )
 }
