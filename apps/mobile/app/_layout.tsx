@@ -9,6 +9,7 @@ import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
 import { useEffect } from 'react'
 import 'react-native-reanimated'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { TamaguiProvider } from 'tamagui'
 
 import { useColorScheme } from '@/src/hooks/useColorScheme'
@@ -20,8 +21,8 @@ export {
 } from 'expo-router'
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  // Start with onboarding flow
+  initialRouteName: 'onboarding',
 }
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -53,17 +54,27 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme()
+  const isLoggedIn = false
 
   return (
-    <TamaguiProvider
-      config={tamaguiConfig}
-      defaultTheme={colorScheme ?? 'light'}
-    >
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-    </TamaguiProvider>
+    <SafeAreaProvider>
+      <TamaguiProvider
+        config={tamaguiConfig}
+        defaultTheme={colorScheme ?? 'light'}
+      >
+        <ThemeProvider
+          value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+        >
+          <Stack>
+            <Stack.Protected guard={isLoggedIn}>
+              <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+            </Stack.Protected>
+            <Stack.Protected guard={!isLoggedIn}>
+              <Stack.Screen name='onboarding' options={{ headerShown: false }} />
+            </Stack.Protected>
+          </Stack>
+        </ThemeProvider>
+      </TamaguiProvider>
+    </SafeAreaProvider>
   )
 }
