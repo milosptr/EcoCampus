@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { TamaguiProvider } from 'tamagui'
 
 import { useColorScheme } from '@/src/hooks/useColorScheme'
+import { useMainStore } from '@/src/store/useMainStore'
 import tamaguiConfig from '../tamagui.config'
 
 export {
@@ -54,7 +55,7 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme()
-  const isLoggedIn = false
+  const isLoggedIn = useMainStore((state) => state.isAuthenticated)
 
   return (
     <SafeAreaProvider>

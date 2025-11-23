@@ -8,6 +8,7 @@ import * as WebBrowser from 'expo-web-browser'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
+import { BackgroundPattern } from '@/src/shapes/BackgroundPattern'
 
 export default function WelcomeScreen() {
   const router = useRouter()
@@ -61,6 +62,16 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaScreen style={styles.container} edges={['left', 'right']}>
+      {/* Background Pattern */}
+      <View style={styles.backgroundPattern}>
+        <BackgroundPattern
+          width='100%'
+          height='100%'
+          color={Colors.primary}
+          preserveAspectRatio='xMidYMid slice'
+        />
+      </View>
+
       {/* Animated Logo */}
       <MotiView
         from={{ translateY: -20, opacity: 0 }}
@@ -184,19 +195,21 @@ export default function WelcomeScreen() {
             <Text style={styles.googleButtonText}>Continue with Google</Text>
           </Pressable>
 
-          <View style={styles.termsContainer}>
-            <Text style={styles.termsText}>
-              By continuing, you agree to our
-            </Text>
-          </View>
-          <View style={styles.termsLinksContainer}>
-            <Pressable onPress={openTerms}>
-              <Text style={styles.termsLink}>Terms of Service</Text>
-            </Pressable>
-            <Text style={styles.termsText}> and </Text>
-            <Pressable onPress={openPrivacy}>
-              <Text style={styles.termsLink}>Privacy Policy</Text>
-            </Pressable>
+          <View style={styles.termsWrapper}>
+            <View style={styles.termsContainer}>
+              <Text style={styles.termsText}>
+                By continuing, you agree to our
+              </Text>
+            </View>
+            <View style={styles.termsLinksContainer}>
+              <Pressable onPress={openTerms}>
+                <Text style={styles.termsLink}>Terms of Service</Text>
+              </Pressable>
+              <Text style={styles.termsText}> and </Text>
+              <Pressable onPress={openPrivacy}>
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </MotiView>
@@ -209,6 +222,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.background,
+  },
+  backgroundPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.1,
+    zIndex: 0,
   },
   logoContainer: {
     alignItems: 'center',
@@ -297,6 +320,9 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
+  termsWrapper: {
+    gap: 4,
+  },
   termsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -306,7 +332,6 @@ const styles = StyleSheet.create({
   termsLinksContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
   },
   termsText: {
     fontSize: 12,

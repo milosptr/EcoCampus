@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useOnboardingStore } from '@/src/store/useOnboardingStore'
+import { useMainStore } from '@/src/store/useMainStore'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
@@ -18,6 +19,7 @@ import { Colors } from '@/src/constants/Colors'
 export default function SuccessScreen() {
   const router = useRouter()
   const store = useOnboardingStore()
+  const setAuthenticated = useMainStore((state) => state.setAuthenticated)
 
   const [joinLeaderboard, setJoinLeaderboard] = useState(store.joinLeaderboard)
   const [dailyReminders, setDailyReminders] = useState(store.dailyReminders)
@@ -29,6 +31,8 @@ export default function SuccessScreen() {
       dailyReminders,
       weeklySummary,
     })
+    // Set user as authenticated
+    setAuthenticated(true)
     // Navigate to main app
     router.replace('/(tabs)')
   }
@@ -40,6 +44,8 @@ export default function SuccessScreen() {
       dailyReminders: true,
       weeklySummary: true,
     })
+    // Set user as authenticated
+    setAuthenticated(true)
     router.replace('/(tabs)')
   }
 
