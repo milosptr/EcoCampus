@@ -12,6 +12,7 @@ import {
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { transportOptions, housingOptions } from '@/src/constants/onboarding'
+import { Colors } from '@/src/constants/Colors'
 
 export default function MetricsScreen() {
   const router = useRouter()
@@ -87,9 +88,9 @@ export default function MetricsScreen() {
                 minimumValue={0}
                 maximumValue={50}
                 step={1}
-                minimumTrackTintColor='#4CAF50'
-                maximumTrackTintColor='#E0E0E0'
-                thumbTintColor='#4CAF50'
+                minimumTrackTintColor={Colors.primary}
+                maximumTrackTintColor={Colors.border}
+                thumbTintColor={Colors.primary}
               />
               <View style={styles.sliderLabels}>
                 <Text style={styles.sliderLabelText}>0 km</Text>
@@ -157,9 +158,9 @@ export default function MetricsScreen() {
                 minimumValue={1}
                 maximumValue={7}
                 step={1}
-                minimumTrackTintColor='#8E44AD'
-                maximumTrackTintColor='#E0E0E0'
-                thumbTintColor='#8E44AD'
+                minimumTrackTintColor={Colors.primary}
+                maximumTrackTintColor={Colors.border}
+                thumbTintColor={Colors.primary}
               />
               <View style={styles.sliderLabels}>
                 <Text style={styles.sliderLabelText}>1 day</Text>
@@ -232,7 +233,7 @@ export default function MetricsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.background,
   },
   headerContainer: {
     paddingTop: 20,
@@ -260,13 +261,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   title: {
-    color: '#1A1A1A',
+    color: Colors.text,
     fontSize: 32,
     fontWeight: 'bold',
     letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#757575',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontSize: 16,
     marginTop: 8,
@@ -279,13 +280,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressBar: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: Colors.border,
     height: 4,
     width: 50,
     borderRadius: 2,
   },
   progressBarActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
   },
   sliderSection: {
     gap: 12,
@@ -299,33 +300,33 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: Colors.text,
     letterSpacing: -0.2,
   },
   optionalText: {
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontWeight: '500',
   },
   badge: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: Colors.primary,
   },
   badgeSecondary: {
-    backgroundColor: '#F3E5F5',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#8E44AD',
+    borderColor: Colors.primary,
   },
   badgeText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: Colors.text,
   },
   slider: {
     width: '100%',
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
   },
   sliderLabelText: {
     fontSize: 13,
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontWeight: '500',
   },
   section: {
@@ -352,38 +353,38 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 14,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.border,
     minWidth: 95,
   },
   transportButtonSelected: {
-    backgroundColor: '#F3E5F5',
+    backgroundColor: Colors.secondaryLight,
     borderWidth: 1,
-    borderColor: '#8E44AD',
+    borderColor: Colors.secondary,
   },
   housingButtonSelected: {
-    backgroundColor: '#FFF9C4',
+    backgroundColor: Colors.secondaryLight,
     borderWidth: 1,
-    borderColor: '#FFD54F',
+    borderColor: Colors.secondary,
   },
   optionButtonPressed: {
     opacity: 0.7,
   },
   optionButtonText: {
     fontSize: 14,
-    color: '#1A1A1A',
+    color: Colors.text,
     textAlign: 'center',
     fontWeight: '600',
   },
   optionButtonTextSelected: {
-    color: '#6A1B9A',
+    color: Colors.text,
   },
   housingButtonTextSelected: {
-    color: '#F57F17',
+    color: Colors.text,
   },
   continueButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 16,
@@ -392,10 +393,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#45A049',
+    borderColor: Colors.primaryDark,
   },
   continueButtonText: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0.5,

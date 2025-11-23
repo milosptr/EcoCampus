@@ -1,5 +1,6 @@
 import { View, StyleSheet, ViewStyle } from 'react-native'
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { Colors } from '@/src/constants/Colors'
 
 interface CardProps {
   children: ReactNode
@@ -24,18 +25,18 @@ export function Card({ children, style, variant = 'default' }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: Colors.border,
   },
   cardSelected: {
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: Colors.primary,
   },
   cardInfo: {
     borderWidth: 1,
-    borderColor: '#E3F2FD',
-    backgroundColor: '#E3F2FD',
+    borderColor: Colors.infoLight,
+    backgroundColor: Colors.infoLight,
   },
 })

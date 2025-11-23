@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons'
 import { useOnboardingStore } from '@/src/store/useOnboardingStore'
 
 import { SafeAreaScreen, Card } from '@/src/components'
+import { Colors } from '@/src/constants/Colors'
 
 export default function SuccessScreen() {
   const router = useRouter()
@@ -95,8 +96,8 @@ export default function SuccessScreen() {
                 <Switch
                   value={joinLeaderboard}
                   onValueChange={setJoinLeaderboard}
-                  trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
-                  thumbColor='#fff'
+                  trackColor={{ false: Colors.border, true: Colors.primary }}
+                  thumbColor={Colors.white}
                 />
               </View>
             </Card>
@@ -118,8 +119,8 @@ export default function SuccessScreen() {
                 <Switch
                   value={dailyReminders}
                   onValueChange={setDailyReminders}
-                  trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
-                  thumbColor='#fff'
+                  trackColor={{ false: Colors.border, true: Colors.primary }}
+                  thumbColor={Colors.white}
                 />
               </View>
             </Card>
@@ -141,8 +142,8 @@ export default function SuccessScreen() {
                 <Switch
                   value={weeklySummary}
                   onValueChange={setWeeklySummary}
-                  trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
-                  thumbColor='#fff'
+                  trackColor={{ false: Colors.border, true: Colors.primary }}
+                  thumbColor={Colors.white}
                 />
               </View>
             </Card>
@@ -192,7 +193,7 @@ export default function SuccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.background,
   },
   headerContainer: {
     paddingTop: 20,
@@ -220,14 +221,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    color: '#1A1A1A',
+    color: Colors.text,
     fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#757575',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontSize: 16,
     marginTop: 8,
@@ -241,13 +242,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressBar: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: Colors.border,
     height: 4,
     width: 50,
     borderRadius: 2,
   },
   progressBarActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
   },
   preferencesContainer: {
     gap: 14,
@@ -266,17 +267,17 @@ const styles = StyleSheet.create({
   preferenceTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1A1A',
+    color: Colors.text,
     marginBottom: 4,
     letterSpacing: -0.2,
   },
   preferenceDescription: {
     fontSize: 13,
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontWeight: '500',
   },
   startButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 16,
@@ -285,10 +286,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#45A049',
+    borderColor: Colors.primaryDark,
   },
   startButtonText: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   skipButtonText: {
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontSize: 15,
     fontWeight: '600',
   },

@@ -1,24 +1,62 @@
 import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
+import { useState } from 'react'
 import { View, Text, Pressable, StyleSheet } from 'react-native'
 import { Feather, AntDesign } from '@expo/vector-icons'
 import * as AppleAuthentication from 'expo-apple-authentication'
+import * as WebBrowser from 'expo-web-browser'
 
 import { SafeAreaScreen, Card } from '@/src/components'
+import { Colors } from '@/src/constants/Colors'
 
 export default function WelcomeScreen() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleAppleSignIn = async () => {
-    // TODO: Implement Supabase Apple authentication
-    // For now, just navigate to next screen
-    router.push('/onboarding/profile')
+    try {
+      setIsLoading(true)
+      const _credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      })
+      // TODO: Implement Supabase Apple authentication with _credential
+      router.push('/onboarding/profile')
+    } catch (e: unknown) {
+      if (e && typeof e === 'object' && 'code' in e) {
+        const error = e as { code: string }
+        if (error.code === 'ERR_REQUEST_CANCELED') {
+          // User canceled the sign-in flow
+          return
+        }
+      }
+      // Handle other errors
+      console.error('Apple authentication error:', e)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleGoogleSignIn = async () => {
-    // TODO: Implement Supabase Google authentication
-    // For now, just navigate to next screen
-    router.push('/onboarding/profile')
+    try {
+      setIsLoading(true)
+      // TODO: Implement Supabase Google authentication
+      router.push('/onboarding/profile')
+    } catch (e: unknown) {
+      console.error('Google authentication error:', e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const openTerms = async () => {
+    await WebBrowser.openBrowserAsync('https://ecocampus.com/terms')
+  }
+
+  const openPrivacy = async () => {
+    await WebBrowser.openBrowserAsync('https://ecocampus.com/privacy')
   }
 
   return (
@@ -93,7 +131,10 @@ export default function WelcomeScreen() {
           <Card>
             <View style={styles.featureCard}>
               <View
-                style={[styles.featureIcon, { backgroundColor: '#4CAF50' }]}
+                style={[
+                  styles.featureIcon,
+                  { backgroundColor: Colors.primary },
+                ]}
               >
                 <Feather name='trending-down' size={22} color='white' />
               </View>
@@ -134,10 +175,12 @@ export default function WelcomeScreen() {
             style={({ pressed }) => [
               styles.googleButton,
               pressed && styles.buttonPressed,
+              isLoading && styles.buttonDisabled,
             ]}
             onPress={handleGoogleSignIn}
+            disabled={isLoading}
           >
-            <AntDesign name='google' size={18} color='#4285F4' />
+            <AntDesign name='google' size={18} color={Colors.googleBlue} />
             <Text style={styles.googleButtonText}>Continue with Google</Text>
           </Pressable>
 
@@ -147,9 +190,13 @@ export default function WelcomeScreen() {
             </Text>
           </View>
           <View style={styles.termsLinksContainer}>
-            <Text style={styles.termsLink}>Terms of Service</Text>
+            <Pressable onPress={openTerms}>
+              <Text style={styles.termsLink}>Terms of Service</Text>
+            </Pressable>
             <Text style={styles.termsText}> and </Text>
-            <Text style={styles.termsLink}>Privacy Policy</Text>
+            <Pressable onPress={openPrivacy}>
+              <Text style={styles.termsLink}>Privacy Policy</Text>
+            </Pressable>
           </View>
         </View>
       </MotiView>
@@ -172,13 +219,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    color: '#1A1A1A',
+    color: Colors.text,
     fontSize: 40,
     fontWeight: 'bold',
     letterSpacing: -1,
   },
   subtitle: {
-    color: '#757575',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontSize: 16,
     marginTop: 8,
@@ -209,12 +256,12 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontWeight: '700',
     fontSize: 16,
-    color: '#1A1A1A',
+    color: Colors.text,
     letterSpacing: -0.2,
   },
   featureDescription: {
     fontSize: 14,
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     marginTop: 2,
     fontWeight: '500',
   },
@@ -234,18 +281,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#fff',
-    borderColor: '#DADCE0',
+    backgroundColor: Colors.white,
+    borderColor: Colors.googleBorder,
     borderWidth: 1.5,
   },
   googleButtonText: {
-    color: '#3C4043',
+    color: Colors.googleText,
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: -0.2,
   },
   buttonPressed: {
     opacity: 0.9,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   termsContainer: {
     flexDirection: 'row',
@@ -260,12 +310,12 @@ const styles = StyleSheet.create({
   },
   termsText: {
     fontSize: 12,
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontWeight: '500',
   },
   termsLink: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: Colors.primary,
     fontWeight: '700',
   },
 })

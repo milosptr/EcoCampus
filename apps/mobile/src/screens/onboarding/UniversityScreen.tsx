@@ -14,6 +14,7 @@ import { useOnboardingStore } from '@/src/store/useOnboardingStore'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { universities } from '@/src/constants/onboarding'
+import { Colors } from '@/src/constants/Colors'
 
 export default function UniversityScreen() {
   const router = useRouter()
@@ -61,9 +62,9 @@ export default function UniversityScreen() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'timing', duration: 500, delay: 200 }}
         >
-          <Card>
+          <Card style={{ backgroundColor: 'transparent', borderWidth: 0 }}>
             <View style={styles.searchContainer}>
-              <Feather name='search' size={20} color='#4CAF50' />
+              <Feather name='search' size={20} color={Colors.primary} />
               <TextInput
                 style={styles.searchInput}
                 placeholder='Search universities...'
@@ -78,7 +79,7 @@ export default function UniversityScreen() {
 
       {/* Info Banner */}
       <Card variant='info' style={styles.infoBanner}>
-        <Feather name='mail' size={16} color='#2196F3' />
+        <Feather name='mail' size={16} color={Colors.info} />
         <Text style={styles.infoBannerText}>
           Email verification required after signup
         </Text>
@@ -118,7 +119,11 @@ export default function UniversityScreen() {
                     {uni}
                   </Text>
                   {selected === uni && (
-                    <Feather name='check-circle' size={20} color='#4CAF50' />
+                    <Feather
+                      name='check-circle'
+                      size={20}
+                      color={Colors.primary}
+                    />
                   )}
                 </View>
               </Card>
@@ -128,7 +133,7 @@ export default function UniversityScreen() {
 
         {filteredUniversities.length === 0 && (
           <View style={styles.emptyState}>
-            <Feather name='search' size={40} color='#E0E0E0' />
+            <Feather name='search' size={40} color={Colors.border} />
             <Text style={styles.emptyStateText}>No universities found</Text>
             <Text style={styles.emptyStateSubtext}>
               Try a different search term
@@ -166,25 +171,24 @@ export default function UniversityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: Colors.background,
   },
   headerContainer: {
     paddingTop: 20,
     paddingBottom: 20,
     gap: 24,
-    backgroundColor: '#fff',
   },
   header: {
     alignItems: 'center',
   },
   title: {
-    color: '#1A1A1A',
+    color: Colors.text,
     fontSize: 32,
     fontWeight: 'bold',
     letterSpacing: -0.5,
   },
   subtitle: {
-    color: '#757575',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontSize: 16,
     marginTop: 8,
@@ -197,13 +201,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   progressBar: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: Colors.border,
     height: 4,
     width: 50,
     borderRadius: 2,
   },
   progressBarActive: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -211,11 +215,15 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1A1A1A',
+    color: Colors.text,
     fontWeight: '500',
   },
   infoBanner: {
@@ -225,14 +233,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
+    borderLeftColor: Colors.info,
     marginTop: 16,
     marginBottom: 8,
   },
   infoBannerText: {
     flex: 1,
     fontSize: 13,
-    color: '#1565C0',
+    color: Colors.infoDark,
     fontWeight: '600',
   },
   listContainer: {
@@ -254,12 +262,12 @@ const styles = StyleSheet.create({
   },
   universityItemText: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: Colors.text,
     fontWeight: '600',
     flex: 1,
   },
   universityItemTextSelected: {
-    color: '#4CAF50',
+    color: Colors.primary,
   },
   emptyState: {
     alignItems: 'center',
@@ -268,12 +276,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyStateText: {
-    color: '#9E9E9E',
+    color: Colors.textMuted,
     fontSize: 16,
     fontWeight: '600',
   },
   emptyStateSubtext: {
-    color: '#BDBDBD',
+    color: Colors.textLight,
     fontSize: 14,
   },
   footer: {
@@ -286,7 +294,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   continueButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.primary,
     paddingVertical: 18,
     paddingHorizontal: 32,
     borderRadius: 16,
@@ -295,14 +303,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#45A049',
+    borderColor: Colors.primaryDark,
   },
   continueButtonDisabled: {
-    backgroundColor: '#BDBDBD',
-    borderColor: '#9E9E9E',
+    backgroundColor: Colors.disabled,
+    borderColor: Colors.textMuted,
   },
   continueButtonText: {
-    color: '#fff',
+    color: Colors.white,
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: 0.5,
