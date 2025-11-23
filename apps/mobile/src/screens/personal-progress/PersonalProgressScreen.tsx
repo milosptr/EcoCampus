@@ -4,7 +4,12 @@ import { Badge } from './components/Badge'
 import { AchievementItem } from './components/AchievementItem'
 import { Challenge } from './components/Challenge'
 import { CheckBoxPlaceholder } from './components/CheckBoxPlaceholder'
+import { LineChart } from "react-native-chart-kit"
+import { Dimensions } from "react-native"
 
+const screenWidth = Dimensions.get("window").width
+
+const monthlyCo2Saved = [3.2, 4.1, 2.8, 5.0, 6.3, 5.5, 4.9, 3.7, 4.5, 5.2, 6.0, 4.8]
 
 const achievements = [
   {
@@ -61,6 +66,45 @@ export default function PersonalProgressScreen() {
         <Text fontSize='$6' fontWeight='600'>
           Monthly progress:
         </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <LineChart
+              data={{
+                labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                datasets: [
+                  {
+                    data: monthlyCo2Saved,
+                  }
+                ]
+              }}
+              width={screenWidth * 1.4}
+              height={220}
+              
+              yAxisSuffix="kg"
+              fromZero={true}
+              chartConfig={{
+                backgroundColor: "#ffffff00",
+                backgroundGradientFrom: "#ffffff00",
+                backgroundGradientTo: "#ffffff00",
+                decimalPlaces: 1,
+                color: () => "#A8E764",
+                labelColor: () => "#888",
+                propsForDots: {
+                  r: "4",
+                  strokeWidth: "2",
+                  stroke: "#A8E764",
+                },
+                propsForBackgroundLines: {
+                  stroke: "#ccc",
+                },
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
+                borderRadius: 12,
+              }}
+            />
+          </ScrollView>
+
         <Separator style={{ backgroundColor: '#ccc', height: 2, marginVertical: 8 }} />
         {/* //TODO: Action history -> show the actions that the user actually did*/}
         <Accordion type="multiple">
