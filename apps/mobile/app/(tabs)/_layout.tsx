@@ -1,15 +1,14 @@
 import React from 'react'
+import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { Tabs } from 'expo-router'
-import { Feather } from '@expo/vector-icons'
 import { Colors } from '@/src/constants/Colors'
 
+// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof Feather>['name']
+  name: React.ComponentProps<typeof FontAwesome>['name']
   color: string
-  size?: number
 }) {
-  const { size = 24, ...rest } = props
-  return <Feather size={size} {...rest} />
+  return <FontAwesome size={28} {...props} />
 }
 
 export default function TabLayout() {
@@ -31,33 +30,27 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name='home' color={color} />,
         }}
       />
-
       <Tabs.Screen
         name='personal-progress/index'
         options={{
           title: 'Personal Progress',
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name='feather' color={color} />
-          ),
+          tabBarIcon: ({ color }) => <TabBarIcon name='leaf' color={color} />,
         }}
       />
-
       <Tabs.Screen
         name='leaderboard/index'
         options={{
           title: 'Leaderboard',
-          // Feather hat "bar-chart-2" (nicht "bar-chart")
           tabBarIcon: ({ color }) => (
-            <TabBarIcon name='bar-chart-2' color={color} />
+            <TabBarIcon name='bar-chart' color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
         name='profile/index'
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => <TabBarIcon name='user' color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name='cog' color={color} />,
         }}
       />
     </Tabs>
