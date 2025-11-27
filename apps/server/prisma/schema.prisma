@@ -6,135 +6,38 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model University {
-  id                   String                @id @default(cuid())
-  name                 String
-  code                 String                @unique
-  description          String?
-  students             User[]
-  actionLogs           ActionLog[]
-  leaderboardSnapshots LeaderboardSnapshot[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-}
-
-model User {
-  id                 String               @id @default(cuid())
-  email              String               @unique
-  hashedPassword     String?
-  fullName           String?
-  universityId       String?
-  university         University?          @relation(fields: [universityId], references: [id])
-  profile            UserProfile?
-  actionLogs         ActionLog[]
-  onboardingSessions OnboardingSession[]
-  streak             UserStreak?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-}
-
-model OnboardingSession {
-  id               String   @id @default(cuid())
-  email            String
-  universityCode   String
-  verificationCode String
-  expiresAt        DateTime
-  completedAt      DateTime?
-  userId           String?
-  user             User?    @relation(fields: [userId], references: [id])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@index([email])
-  @@index([verificationCode])
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model UserProfile {
-  id                   String   @id @default(cuid())
-  userId               String   @unique
-  displayName          String?
-  avatarUrl            String?
-  bio                  String?
-  preferences          Json?
-  notificationsEnabled Boolean  @default(true)
-  timezone             String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  user                 User     @relation(fields: [userId], references: [id])
-}
+  id        String   @id @default(uuid())
+  authId    String   @unique // Maps to Supabase Auth user ID
+  email     String   @unique
+  name      String?
+  avatarUrl String?
 
-model ActionCategory {
-  id            String           @id @default(cuid())
-  slug          String           @unique
-  title         String
-  description   String?
-  defaultPoints Int              @default(50)
-  actions       ActionTemplate[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-}
+  // Onboarding: Personal Profile
+  age               String?
+  gender            String? // 'male' | 'female' | 'non-binary' | 'prefer-not-to-say'
+  dietaryPreference String? // 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian'
 
-model ActionTemplate {
-  id          String          @id @default(cuid())
-  categoryId  String
-  category    ActionCategory  @relation(fields: [categoryId], references: [id])
-  title       String
-  description String?
-  points      Int             @default(50)
-  metadata    Json?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  logs        ActionLog[]
-}
+  // Onboarding: University & Commute
+  university         String?
+  distanceFromCampus Float?
+  transportMode      String? // 'walk' | 'bike' | 'bus' | 'car' | 'carpool'
+  housingType        String? // 'dorm' | 'apartment' | 'house' | 'shared-housing'
+  weeklyCampusVisits Int?
 
-model ActionLog {
-  id            String          @id @default(cuid())
-  userId        String
-  actionId      String
-  universityId  String?
-  pointsAwarded Int             @default(0)
-  occurredAt    DateTime        @default(now())
-  metadata      Json?
-  createdAt     DateTime        @default(now())
-  user          User            @relation(fields: [userId], references: [id])
-  action        ActionTemplate  @relation(fields: [actionId], references: [id])
-  university    University?     @relation(fields: [universityId], references: [id])
+  // Onboarding: Preferences
+  joinLeaderboard Boolean @default(true)
+  dailyReminders  Boolean @default(true)
+  weeklySummary   Boolean @default(true)
 
-  @@index([userId, occurredAt])
-  @@index([universityId, occurredAt])
-}
+  // Onboarding completion flag
+  onboardingCompleted Boolean @default(false)
 
-enum LeaderboardRange {
-  DAILY
-  WEEKLY
-  MONTHLY
-  SEMESTER
-}
-
-model LeaderboardSnapshot {
-  id           String           @id @default(cuid())
-  universityId String
-  range        LeaderboardRange
-  periodStart  DateTime
-  periodEnd    DateTime
-  totalPoints  Int              @default(0)
-  rank         Int?
-  createdAt    DateTime         @default(now())
-  university   University       @relation(fields: [universityId], references: [id])
-
-  @@unique([universityId, range, periodStart, periodEnd])
-}
-
-model UserStreak {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  currentStreakDays Int      @default(0)
-  longestStreakDays Int      @default(0)
-  lastActionAt      DateTime?
-  updatedAt         DateTime @updatedAt
-  user              User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

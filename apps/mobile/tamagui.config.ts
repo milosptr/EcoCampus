@@ -1,19 +1,6 @@
 import { createTamagui } from 'tamagui'
 import { defaultConfig } from '@tamagui/config/v4'
-
-// Custom color palette from Colors.ts
-const customColors = {
-  background: '#F3F7EC',
-  backgroundDark: '#1C240F',
-  primary: '#568366',
-  primaryDisabled: '#baccbf',
-  secondary: '#93C3A6',
-  tertiary: '#DCF790',
-  error: '#FC6E53',
-  warning: '#FED056',
-  white: '#FFFFFF',
-  black: '#111111',
-}
+import { Colors } from './src/constants/Colors'
 
 export const tamaguiConfig = createTamagui({
   ...defaultConfig,
@@ -30,33 +17,40 @@ export const tamaguiConfig = createTamagui({
     ...defaultConfig.themes,
     light: {
       ...defaultConfig.themes.light,
-      background: customColors.background,
-      backgroundPress: customColors.background,
-      color: customColors.black,
-      colorPress: customColors.black,
-      primary: customColors.primary,
-      secondary: customColors.secondary,
-      tertiary: customColors.tertiary,
-      error: customColors.error,
-      warning: customColors.warning,
+      background: Colors.background,
+      backgroundPress: Colors.background,
+      color: Colors.text,
+      colorPress: Colors.text,
+      primary: Colors.primary,
+      secondary: Colors.secondary,
+      tertiary: Colors.tertiary,
+      quaternary: Colors.quaternary,
+      error: Colors.error,
+      warning: Colors.warning,
+      success: Colors.success,
+      info: Colors.info,
+      border: Colors.border,
       // Tab-specific colors
-      tabIconDefault: customColors.primaryDisabled,
-      tabIconSelected: customColors.primary,
+      tabIconDefault: Colors.textMuted,
+      tabIconSelected: Colors.primary,
     },
     dark: {
       ...defaultConfig.themes.dark,
-      background: customColors.backgroundDark,
-      backgroundPress: customColors.backgroundDark,
-      color: customColors.white,
-      colorPress: customColors.white,
-      primary: customColors.secondary,
-      secondary: customColors.secondary,
-      tertiary: customColors.tertiary,
-      error: customColors.error,
-      warning: customColors.warning,
+      background: Colors.backgroundDark,
+      backgroundPress: Colors.backgroundDark,
+      color: Colors.white,
+      colorPress: Colors.white,
+      primary: Colors.secondary,
+      secondary: Colors.secondary,
+      tertiary: Colors.tertiary,
+      quaternary: Colors.quaternary,
+      error: Colors.error,
+      warning: Colors.warning,
+      success: Colors.success,
+      info: Colors.info,
       // Tab-specific colors
-      tabIconDefault: customColors.primaryDisabled,
-      tabIconSelected: customColors.secondary,
+      tabIconDefault: Colors.textMuted,
+      tabIconSelected: Colors.secondary,
     },
   },
 
