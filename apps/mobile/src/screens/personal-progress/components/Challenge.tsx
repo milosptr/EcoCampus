@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
-import { YStack, Text } from 'tamagui'
+import { View } from 'react-native'
+import { YStack, Text, Paragraph, XStack } from 'tamagui'
 
 interface ChallengeProps {}
 
@@ -20,12 +21,23 @@ export const Challenge: React.FC<ChallengeProps> = () => {
 
   return (
     <YStack style={{ padding: 12, borderRadius: 8 }}>
-      <Text fontWeight="600" fontSize={16}>
+      <Text fontWeight='600' fontSize={16}>
         Challenge of the day:
       </Text>
-      <Text fontSize={14} style={{ marginTop: 4 }}>
-        {challengeOfTheDay}
-      </Text>
+      <XStack
+        borderColor='$borderColor'
+        style={{
+          marginTop: 16,
+          padding: 12,
+          borderWidth: 1,
+          backgroundColor: '#F3F7EC',
+          borderRadius: 8,
+        }}
+      >
+        <Paragraph fontSize='$6' fontWeight='600'>
+          {challengeOfTheDay}
+        </Paragraph>
+      </XStack>
     </YStack>
   )
 }
