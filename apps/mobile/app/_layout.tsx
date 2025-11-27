@@ -96,10 +96,17 @@ function RootLayoutNav() {
               <Stack.Screen name='(auth)' options={{ headerShown: false }} />
             </Stack.Protected>
             <Stack.Protected guard={showOnboarding}>
-              <Stack.Screen name='onboarding' options={{ headerShown: false }} />
+              <Stack.Screen
+                name='onboarding'
+                options={{ headerShown: false }}
+              />
             </Stack.Protected>
             <Stack.Protected guard={showTabs}>
               <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+              <Stack.Screen
+                name='profile/settings'
+                options={{ headerShown: false }}
+              />
             </Stack.Protected>
           </Stack>
         </ThemeProvider>

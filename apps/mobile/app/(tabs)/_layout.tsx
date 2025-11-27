@@ -47,9 +47,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name='settings/index'
+        name='profile/index'
         options={{
-          title: 'Settings',
+          title: 'Profile',
           tabBarIcon: ({ color }) => <TabBarIcon name='cog' color={color} />,
         }}
       />
