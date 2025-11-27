@@ -13,7 +13,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { TamaguiProvider } from 'tamagui'
 
 import { useColorScheme } from '@/src/hooks/useColorScheme'
+import { useSession } from '@/src/hooks/useSession'
 import { useMainStore } from '@/src/store/useMainStore'
+import { TRPCProvider } from '@/src/trpc'
 import tamaguiConfig from '../tamagui.config'
 
 export {
@@ -22,8 +24,8 @@ export {
 } from 'expo-router'
 
 export const unstable_settings = {
-  // Start with onboarding flow
-  initialRouteName: 'onboarding',
+  // Start with auth flow for unauthenticated users
+  initialRouteName: '(auth)',
 }
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -50,12 +52,35 @@ export default function RootLayout() {
     return null
   }
 
-  return <RootLayoutNav />
+  return (
+    <TRPCProvider>
+      <RootLayoutNav />
+    </TRPCProvider>
+  )
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme()
-  const isLoggedIn = useMainStore((state) => state.isAuthenticated)
+  const isAuthenticated = useMainStore((state) => state.isAuthenticated)
+  const userProfile = useMainStore((state) => state.userProfile)
+  const isCompletingLogin = useMainStore((state) => state.isCompletingLogin)
+  const isInitializing = useSession()
+
+  // Keep showing nothing while session is being determined
+  // This keeps the splash screen visible
+  if (isInitializing) {
+    return null
+  }
+
+  // 3-state routing based on auth + onboarding status
+  // Stay on auth screen while completing login (fetching user profile)
+  const showAuth = !isAuthenticated || isCompletingLogin
+  const showOnboarding =
+    isAuthenticated && !isCompletingLogin && !userProfile?.onboardingCompleted
+  const showTabs =
+    isAuthenticated &&
+    !isCompletingLogin &&
+    (userProfile?.onboardingCompleted ?? false)
 
   return (
     <SafeAreaProvider>
@@ -67,14 +92,14 @@ function RootLayoutNav() {
           value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
         >
           <Stack>
-            <Stack.Protected guard={isLoggedIn}>
-              <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+            <Stack.Protected guard={showAuth}>
+              <Stack.Screen name='(auth)' options={{ headerShown: false }} />
             </Stack.Protected>
-            <Stack.Protected guard={!isLoggedIn}>
-              <Stack.Screen
-                name='onboarding'
-                options={{ headerShown: false }}
-              />
+            <Stack.Protected guard={showOnboarding}>
+              <Stack.Screen name='onboarding' options={{ headerShown: false }} />
+            </Stack.Protected>
+            <Stack.Protected guard={showTabs}>
+              <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
             </Stack.Protected>
           </Stack>
         </ThemeProvider>

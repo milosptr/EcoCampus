@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import {
   View,
@@ -8,45 +7,90 @@ import {
   Switch,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useOnboardingStore } from '@/src/store/useOnboardingStore'
-import { useMainStore } from '@/src/store/useMainStore'
+import { useMainStore, type UserProfile } from '@/src/store/useMainStore'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
+import { trpc } from '@/src/trpc'
 
 export default function SuccessScreen() {
-  const router = useRouter()
   const store = useOnboardingStore()
-  const setAuthenticated = useMainStore((state) => state.setAuthenticated)
+  const setUserProfile = useMainStore((state) => state.setUserProfile)
 
   const [joinLeaderboard, setJoinLeaderboard] = useState(store.joinLeaderboard)
   const [dailyReminders, setDailyReminders] = useState(store.dailyReminders)
   const [weeklySummary, setWeeklySummary] = useState(store.weeklySummary)
+  const [isSaving, setIsSaving] = useState(false)
 
-  const handleStart = () => {
+  // Mutation to save onboarding profile to backend
+  const saveProfileMutation = trpc.user.saveOnboardingProfile.useMutation()
+
+  const saveOnboardingData = async (preferences: {
+    joinLeaderboard: boolean
+    dailyReminders: boolean
+    weeklySummary: boolean
+  }) => {
+    try {
+      setIsSaving(true)
+      const updatedProfile = await saveProfileMutation.mutateAsync({
+        fullName: store.fullName,
+        age: store.age || undefined,
+        gender: store.gender,
+        dietaryPreference: store.dietaryPreference,
+        university: store.university,
+        distanceFromCampus: store.distanceFromCampus || undefined,
+        transportMode: store.transportMode,
+        housingType: store.housingType,
+        weeklyCampusVisits: store.weeklyCampusVisits || undefined,
+        joinLeaderboard: preferences.joinLeaderboard,
+        dailyReminders: preferences.dailyReminders,
+        weeklySummary: preferences.weeklySummary,
+      })
+
+      // Update user profile in store - this triggers navigation via the guard
+      setUserProfile(updatedProfile as UserProfile)
+
+      // Clear onboarding store after successful save
+      store.reset()
+    } catch (error) {
+      console.error('Failed to save onboarding profile:', error)
+      // Don't block the user - they can retry later
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleStart = async () => {
     store.setPreferences({
       joinLeaderboard,
       dailyReminders,
       weeklySummary,
     })
-    // Set user as authenticated
-    setAuthenticated(true)
-    // Navigate to main app
-    router.replace('/(tabs)')
+
+    await saveOnboardingData({
+      joinLeaderboard,
+      dailyReminders,
+      weeklySummary,
+    })
   }
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     // Save with default preferences
     store.setPreferences({
       joinLeaderboard: true,
       dailyReminders: true,
       weeklySummary: true,
     })
-    // Set user as authenticated
-    setAuthenticated(true)
-    router.replace('/(tabs)')
+
+    await saveOnboardingData({
+      joinLeaderboard: true,
+      dailyReminders: true,
+      weeklySummary: true,
+    })
   }
 
   return (
@@ -168,11 +212,19 @@ export default function SuccessScreen() {
             style={({ pressed }) => [
               styles.startButton,
               pressed && styles.buttonPressed,
+              isSaving && styles.buttonDisabled,
             ]}
             onPress={handleStart}
+            disabled={isSaving}
           >
-            <Text style={styles.startButtonText}>Start Tracking</Text>
-            <Feather name='arrow-right' size={20} color='#fff' />
+            {isSaving ? (
+              <ActivityIndicator color='#fff' />
+            ) : (
+              <>
+                <Text style={styles.startButtonText}>Start Tracking</Text>
+                <Feather name='arrow-right' size={20} color='#fff' />
+              </>
+            )}
           </Pressable>
         </MotiView>
 
@@ -187,6 +239,7 @@ export default function SuccessScreen() {
               pressed && styles.skipButtonPressed,
             ]}
             onPress={handleSkip}
+            disabled={isSaving}
           >
             <Text style={styles.skipButtonText}>Skip for now</Text>
           </Pressable>
@@ -314,6 +367,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.9,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   skipButtonPressed: {
     opacity: 0.6,

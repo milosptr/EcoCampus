@@ -186,7 +186,7 @@ Each module exports a router (e.g., `authRouter`, `actionsRouter`) that gets mer
 - `eslint-disable` comments - Address the lint rule violation properly
 - `eslint-disable-next-line` - Same as above; fix the issue, don't suppress it
 - `@ts-nocheck` - Never disable type checking for entire files
-- commenting the lines / code
+- NEVER commenting the lines / code
 
 If you encounter type errors or lint warnings, solve them by:
 

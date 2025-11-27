@@ -1,30 +1,74 @@
-import { useRouter } from 'expo-router'
 import { MotiView } from 'moti'
 import { useState } from 'react'
-import { View, Text, Pressable, StyleSheet } from 'react-native'
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Alert,
+  Platform,
+  ActivityIndicator,
+} from 'react-native'
 import { Feather, AntDesign } from '@expo/vector-icons'
 import * as AppleAuthentication from 'expo-apple-authentication'
 import * as WebBrowser from 'expo-web-browser'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
+import { useCompleteLogin } from '@/src/hooks/useCompleteLogin'
+import { AppleSignIn } from '@/src/lib/AppleSignIn'
+import { useGoogleAuth } from '@/src/lib/GoogleSignIn'
+import { supabase } from '@/src/lib/supabase'
 import { BackgroundPattern } from '@/src/shapes/BackgroundPattern'
 
 export default function WelcomeScreen() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isAppleLoading, setIsAppleLoading] = useState(false)
+  const { startLogin, completeLogin, fakeCompleteLogin } = useCompleteLogin()
+
+  // Google auth via expo-auth-session hook
+  const {
+    signIn: googleSignIn,
+    isLoading: isGoogleLoading,
+    isReady: isGoogleReady,
+  } = useGoogleAuth(
+    // onStart callback - prevent screen jumping
+    startLogin,
+    // onSuccess callback
+    async () => {
+      await completeLogin()
+    },
+    // onError callback
+    (error) => {
+      console.error('Google authentication error:', error)
+      Alert.alert(
+        'Sign In Failed',
+        'Unable to sign in with Google. Please try again.'
+      )
+    }
+  )
+
+  const isLoading = isAppleLoading || isGoogleLoading
 
   const handleAppleSignIn = async () => {
     try {
-      setIsLoading(true)
-      const _credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
+      setIsAppleLoading(true)
+
+      // Get Apple identity token
+      const idToken = await AppleSignIn.signInGetIdToken()
+
+      // Signal login started BEFORE Supabase auth to prevent screen jumping
+      startLogin()
+
+      // Exchange with Supabase
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: idToken,
       })
-      // TODO: Implement Supabase Apple authentication with _credential
-      router.push('/onboarding/profile')
+
+      if (error) throw error
+
+      // Complete login flow (fetch/create user, navigate)
+      await completeLogin()
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'code' in e) {
         const error = e as { code: string }
@@ -33,23 +77,22 @@ export default function WelcomeScreen() {
           return
         }
       }
-      // Handle other errors
       console.error('Apple authentication error:', e)
+      Alert.alert(
+        'Sign In Failed',
+        'Unable to sign in with Apple. Please try again.'
+      )
     } finally {
-      setIsLoading(false)
+      setIsAppleLoading(false)
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true)
-      // TODO: Implement Supabase Google authentication
-      router.push('/onboarding/profile')
-    } catch (e: unknown) {
-      console.error('Google authentication error:', e)
-    } finally {
-      setIsLoading(false)
+  const handleGoogleSignIn = () => {
+    if (!isGoogleReady) {
+      Alert.alert('Please wait', 'Google Sign-In is initializing...')
+      return
     }
+    googleSignIn()
   }
 
   const openTerms = async () => {
@@ -58,6 +101,10 @@ export default function WelcomeScreen() {
 
   const openPrivacy = async () => {
     await WebBrowser.openBrowserAsync('https://ecocampus.com/privacy')
+  }
+
+  const handleSkip = async () => {
+    await fakeCompleteLogin()
   }
 
   return (
@@ -168,49 +215,70 @@ export default function WelcomeScreen() {
         style={{ width: '100%' }}
       >
         <View style={styles.buttonsContainer}>
-          {/* Apple Sign In Button */}
-          <AppleAuthentication.AppleAuthenticationButton
-            buttonType={
-              AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
-            }
-            buttonStyle={
-              AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-            }
-            cornerRadius={12}
-            style={styles.appleButton}
-            onPress={handleAppleSignIn}
-          />
+          {isLoading && (
+            <ActivityIndicator size='large' color={Colors.primary} />
+          )}
+          {!isLoading && (
+            <>
+              {/* Apple Sign In Button - iOS only */}
+              {Platform.OS === 'ios' && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={
+                    AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
+                  }
+                  buttonStyle={
+                    AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+                  }
+                  cornerRadius={12}
+                  style={styles.appleButton}
+                  onPress={handleAppleSignIn}
+                />
+              )}
 
-          {/* Google Sign In Button */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.googleButton,
-              pressed && styles.buttonPressed,
-              isLoading && styles.buttonDisabled,
-            ]}
-            onPress={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            <AntDesign name='google' size={18} color={Colors.googleBlue} />
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
-          </Pressable>
+              {/* Google Sign In Button */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.googleButton,
+                  pressed && styles.buttonPressed,
+                  isLoading && styles.buttonDisabled,
+                ]}
+                onPress={handleGoogleSignIn}
+                disabled={isLoading}
+              >
+                <AntDesign name='google' size={18} color={Colors.googleBlue} />
+                <Text style={styles.googleButtonText}>
+                  Continue with Google
+                </Text>
+              </Pressable>
+              <Pressable onPress={handleSkip}>
+                <Text
+                  style={[
+                    styles.googleButtonText,
+                    { textAlign: 'center', color: Colors.quaternary },
+                  ]}
+                >
+                  Continue as Guest
+                </Text>
+              </Pressable>
 
-          <View style={styles.termsWrapper}>
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                By continuing, you agree to our
-              </Text>
-            </View>
-            <View style={styles.termsLinksContainer}>
-              <Pressable onPress={openTerms}>
-                <Text style={styles.termsLink}>Terms of Service</Text>
-              </Pressable>
-              <Text style={styles.termsText}> and </Text>
-              <Pressable onPress={openPrivacy}>
-                <Text style={styles.termsLink}>Privacy Policy</Text>
-              </Pressable>
-            </View>
-          </View>
+              <View style={styles.termsWrapper}>
+                <View style={styles.termsContainer}>
+                  <Text style={styles.termsText}>
+                    By continuing, you agree to our
+                  </Text>
+                </View>
+                <View style={styles.termsLinksContainer}>
+                  <Pressable onPress={openTerms}>
+                    <Text style={styles.termsLink}>Terms of Service</Text>
+                  </Pressable>
+                  <Text style={styles.termsText}> and </Text>
+                  <Pressable onPress={openPrivacy}>
+                    <Text style={styles.termsLink}>Privacy Policy</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </>
+          )}
         </View>
       </MotiView>
     </SafeAreaScreen>

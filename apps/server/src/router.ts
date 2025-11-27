@@ -3,6 +3,7 @@ import { authRouter } from './modules/auth/index.js'
 import { leaderboardRouter } from './modules/leaderboard/index.js'
 import { profileRouter } from './modules/profile/index.js'
 import { progressRouter } from './modules/progress/index.js'
+import { userRouter } from './modules/user/index.js'
 import { createCallerFactory, createTRPCRouter, publicProcedure } from './trpc.js'
 
 export const appRouter = createTRPCRouter({
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
   })),
 
   auth: authRouter,
+  user: userRouter,
   actions: actionsRouter,
   leaderboard: leaderboardRouter,
   progress: progressRouter,
