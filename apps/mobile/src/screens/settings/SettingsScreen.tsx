@@ -1,5 +1,7 @@
 import { YStack, Text } from 'tamagui'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Pressable } from 'react-native'
+import { signOut } from '@/src/lib/signOut'
 
 export default function SettingsScreen() {
   return (
@@ -11,6 +13,11 @@ export default function SettingsScreen() {
         <Text color='$color' fontSize='$5'>
           Welcome to the settings!
         </Text>
+        <Pressable onPress={signOut}>
+          <Text color='$color' fontSize='$5'>
+            Sign Out
+          </Text>
+        </Pressable>
       </YStack>
     </SafeAreaView>
   )
