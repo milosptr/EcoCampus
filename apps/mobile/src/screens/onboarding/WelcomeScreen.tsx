@@ -6,93 +6,121 @@ import {
   Pressable,
   StyleSheet,
   Alert,
-  Platform,
   ActivityIndicator,
+  TextInput,
+  Image,
 } from 'react-native'
-import { Feather, AntDesign } from '@expo/vector-icons'
-import * as AppleAuthentication from 'expo-apple-authentication'
+import { Feather } from '@expo/vector-icons'
 import * as WebBrowser from 'expo-web-browser'
+import LogoImage from '@/assets/images/icon.png'
 
 import { SafeAreaScreen, Card } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
 import { useCompleteLogin } from '@/src/hooks/useCompleteLogin'
-import { AppleSignIn } from '@/src/lib/AppleSignIn'
-import { useGoogleAuth } from '@/src/lib/GoogleSignIn'
 import { supabase } from '@/src/lib/supabase'
 import { BackgroundPattern } from '@/src/shapes/BackgroundPattern'
+import { useMainStore } from '@/src/store/useMainStore'
+
+const featureHighlights = [
+  {
+    icon: 'activity' as const,
+    color: Colors.quaternary,
+    title: 'Track Your Impact',
+    description: 'Log eco-friendly actions daily',
+  },
+  {
+    icon: 'users' as const,
+    color: Colors.tertiaryMedium,
+    title: 'Compete & Connect',
+    description: 'Join your university leaderboard',
+  },
+  {
+    icon: 'trending-down' as const,
+    color: Colors.primary,
+    title: 'Reduce CO₂ Emissions',
+    description: 'Monitor your environmental footprint',
+  },
+]
 
 export default function WelcomeScreen() {
-  const [isAppleLoading, setIsAppleLoading] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const setCompletingLogin = useMainStore((state) => state.setCompletingLogin)
   const { startLogin, completeLogin, fakeCompleteLogin } = useCompleteLogin()
 
-  // Google auth via expo-auth-session hook
-  const {
-    signIn: googleSignIn,
-    isLoading: isGoogleLoading,
-    isReady: isGoogleReady,
-  } = useGoogleAuth(
-    // onStart callback - prevent screen jumping
-    startLogin,
-    // onSuccess callback
-    async () => {
-      await completeLogin()
-    },
-    // onError callback
-    (error) => {
-      console.error('Google authentication error:', error)
-      Alert.alert(
-        'Sign In Failed',
-        'Unable to sign in with Google. Please try again.'
-      )
-    }
-  )
+  const isLoading = isSubmitting
 
-  const isLoading = isAppleLoading || isGoogleLoading
+  const handleEmailPasswordSubmit = async () => {
+    if (isSubmitting) return
 
-  const handleAppleSignIn = async () => {
-    try {
-      setIsAppleLoading(true)
-
-      // Get Apple identity token
-      const idToken = await AppleSignIn.signInGetIdToken()
-
-      // Signal login started BEFORE Supabase auth to prevent screen jumping
-      startLogin()
-
-      // Exchange with Supabase
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'apple',
-        token: idToken,
-      })
-
-      if (error) throw error
-
-      // Complete login flow (fetch/create user, navigate)
-      await completeLogin()
-    } catch (e: unknown) {
-      if (e && typeof e === 'object' && 'code' in e) {
-        const error = e as { code: string }
-        if (error.code === 'ERR_REQUEST_CANCELED') {
-          // User canceled the sign-in flow
-          return
-        }
-      }
-      console.error('Apple authentication error:', e)
-      Alert.alert(
-        'Sign In Failed',
-        'Unable to sign in with Apple. Please try again.'
-      )
-    } finally {
-      setIsAppleLoading(false)
-    }
-  }
-
-  const handleGoogleSignIn = () => {
-    if (!isGoogleReady) {
-      Alert.alert('Please wait', 'Google Sign-In is initializing...')
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail || !password.trim()) {
+      setFormError('Enter both email and password to continue.')
       return
     }
-    googleSignIn()
+
+    setIsSubmitting(true)
+    setFormError(null)
+    startLogin()
+
+    let completedLogin = false
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
+
+      if (signInError) {
+        if (signInError.message === 'Invalid login credentials') {
+          const { data: signUpData, error: signUpError } =
+            await supabase.auth.signUp({
+              email: normalizedEmail,
+              password,
+            })
+
+          if (signUpError) {
+            if (signUpError.message === 'User already registered') {
+              setFormError('Incorrect password. Please try again.')
+              return
+            }
+
+            throw signUpError
+          }
+
+          if (!signUpData.session) {
+            Alert.alert(
+              'Check Your Email',
+              'Please confirm your email address to continue.'
+            )
+            return
+          }
+        } else {
+          throw signInError
+        }
+      }
+
+      await completeLogin()
+      completedLogin = true
+    } catch (error) {
+      console.error('Email authentication error:', error)
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in with email and password.'
+      setFormError(message)
+      Alert.alert(
+        'Sign In Failed',
+        'Unable to authenticate with email and password. Please try again.'
+      )
+    } finally {
+      if (!completedLogin) {
+        setCompletingLogin(false)
+      }
+      setIsSubmitting(false)
+    }
   }
 
   const openTerms = async () => {
@@ -126,7 +154,12 @@ export default function WelcomeScreen() {
         transition={{ type: 'spring', damping: 20, stiffness: 150 }}
       >
         <View style={styles.logoContainer}>
-          <Text style={styles.logoEmoji}>🌱</Text>
+          <View style={styles.logoImageContainer}>
+            <Image
+              source={LogoImage}
+              style={{ width: '100%', height: '100%', borderRadius: 12 }}
+            />
+          </View>
           <Text style={styles.title}>EcoCampus</Text>
           <Text style={styles.subtitle}>
             Track your impact. Build better habits.{'\n'}Make a difference,
@@ -135,74 +168,37 @@ export default function WelcomeScreen() {
         </View>
       </MotiView>
 
-      {/* Feature Cards */}
+      {/* Feature Highlights */}
       <View style={styles.featuresContainer}>
         <MotiView
-          from={{ translateX: -50, opacity: 0 }}
+          from={{ translateX: -40, opacity: 0 }}
           animate={{ translateX: 0, opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 300 }}
+          transition={{ type: 'timing', duration: 500, delay: 350 }}
         >
-          <Card>
-            <View style={styles.featureCard}>
-              <View
-                style={[styles.featureIcon, { backgroundColor: '#8E44AD' }]}
-              >
-                <Feather name='activity' size={22} color='white' />
+          <Card style={styles.featuresCard}>
+            {featureHighlights.map((feature, index) => (
+              <View key={feature.title}>
+                <View style={styles.featureRow}>
+                  <View
+                    style={[
+                      styles.featureIcon,
+                      { backgroundColor: feature.color },
+                    ]}
+                  >
+                    <Feather name={feature.icon} size={18} color='white' />
+                  </View>
+                  <View style={styles.featureText}>
+                    <Text style={styles.featureTitle}>{feature.title}</Text>
+                    <Text style={styles.featureDescription}>
+                      {feature.description}
+                    </Text>
+                  </View>
+                </View>
+                {index < featureHighlights.length - 1 && (
+                  <View style={styles.featureDivider} />
+                )}
               </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Track Your Impact</Text>
-                <Text style={styles.featureDescription}>
-                  Log eco-friendly actions daily
-                </Text>
-              </View>
-            </View>
-          </Card>
-        </MotiView>
-
-        <MotiView
-          from={{ translateX: -50, opacity: 0 }}
-          animate={{ translateX: 0, opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 450 }}
-        >
-          <Card>
-            <View style={styles.featureCard}>
-              <View
-                style={[styles.featureIcon, { backgroundColor: '#FFD54F' }]}
-              >
-                <Feather name='users' size={22} color='#111' />
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Compete & Connect</Text>
-                <Text style={styles.featureDescription}>
-                  Join your university leaderboard
-                </Text>
-              </View>
-            </View>
-          </Card>
-        </MotiView>
-
-        <MotiView
-          from={{ translateX: -50, opacity: 0 }}
-          animate={{ translateX: 0, opacity: 1 }}
-          transition={{ type: 'timing', duration: 500, delay: 600 }}
-        >
-          <Card>
-            <View style={styles.featureCard}>
-              <View
-                style={[
-                  styles.featureIcon,
-                  { backgroundColor: Colors.primary },
-                ]}
-              >
-                <Feather name='trending-down' size={22} color='white' />
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureTitle}>Reduce CO₂ Emissions</Text>
-                <Text style={styles.featureDescription}>
-                  Monitor your environmental footprint
-                </Text>
-              </View>
-            </View>
+            ))}
           </Card>
         </MotiView>
       </View>
@@ -215,45 +211,64 @@ export default function WelcomeScreen() {
         style={{ width: '100%' }}
       >
         <View style={styles.buttonsContainer}>
-          {isLoading && (
+          {isLoading ? (
             <ActivityIndicator size='large' color={Colors.primary} />
-          )}
-          {!isLoading && (
+          ) : (
             <>
-              {/* Apple Sign In Button - iOS only */}
-              {Platform.OS === 'ios' && (
-                <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={
-                    AppleAuthentication.AppleAuthenticationButtonType.CONTINUE
-                  }
-                  buttonStyle={
-                    AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                  }
-                  cornerRadius={12}
-                  style={styles.appleButton}
-                  onPress={handleAppleSignIn}
+              <View style={styles.formField}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder='you@email.com'
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType='email-address'
+                  autoCapitalize='none'
+                  autoCorrect={false}
+                  textContentType='emailAddress'
+                  value={email}
+                  onChangeText={setEmail}
+                  returnKeyType='next'
+                  editable={!isLoading}
                 />
-              )}
+              </View>
 
-              {/* Google Sign In Button */}
+              <View style={styles.formField}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder='Create a password'
+                  placeholderTextColor={Colors.textMuted}
+                  secureTextEntry
+                  autoCapitalize='none'
+                  autoCorrect={false}
+                  textContentType='password'
+                  value={password}
+                  onChangeText={setPassword}
+                  returnKeyType='done'
+                  editable={!isLoading}
+                  onSubmitEditing={handleEmailPasswordSubmit}
+                />
+              </View>
+
+              {formError ? (
+                <Text style={styles.errorText}>{formError}</Text>
+              ) : null}
+
               <Pressable
                 style={({ pressed }) => [
-                  styles.googleButton,
+                  styles.primaryButton,
                   pressed && styles.buttonPressed,
                   isLoading && styles.buttonDisabled,
                 ]}
-                onPress={handleGoogleSignIn}
+                onPress={handleEmailPasswordSubmit}
                 disabled={isLoading}
               >
-                <AntDesign name='google' size={18} color={Colors.googleBlue} />
-                <Text style={styles.googleButtonText}>
-                  Continue with Google
-                </Text>
+                <Text style={styles.primaryButtonText}>Continue</Text>
               </Pressable>
               <Pressable onPress={handleSkip}>
                 <Text
                   style={[
-                    styles.googleButtonText,
+                    styles.secondaryActionText,
                     { textAlign: 'center', color: Colors.quaternary },
                   ]}
                 >
@@ -301,6 +316,15 @@ const styles = StyleSheet.create({
     opacity: 0.1,
     zIndex: 0,
   },
+  logoImageContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+  },
   logoContainer: {
     alignItems: 'center',
     marginBottom: 32,
@@ -325,19 +349,27 @@ const styles = StyleSheet.create({
   },
   featuresContainer: {
     width: '100%',
-    gap: 12,
-    marginBottom: 32,
+    marginBottom: 28,
   },
-  featureCard: {
-    padding: 18,
+  featuresCard: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  featureRow: {
     flexDirection: 'row',
-    gap: 14,
     alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  featureDivider: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginHorizontal: 4,
   },
   featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 32,
+    height: 32,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -360,27 +392,48 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 14,
   },
-  appleButton: {
-    width: '100%',
-    height: 52,
+  formField: {
+    gap: 6,
   },
-  googleButton: {
-    flexDirection: 'row',
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.text,
+    letterSpacing: -0.1,
+  },
+  input: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: Colors.white,
+    color: Colors.text,
+    fontSize: 16,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  primaryButton: {
+    backgroundColor: Colors.buttonPrimary,
+    borderColor: Colors.buttonPrimaryBorder,
+    borderWidth: 1.5,
     paddingVertical: 16,
-    paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: Colors.white,
-    borderColor: Colors.googleBorder,
-    borderWidth: 1.5,
   },
-  googleButtonText: {
-    color: Colors.googleText,
+  primaryButtonText: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  secondaryActionText: {
     fontSize: 16,
     fontWeight: '600',
-    letterSpacing: -0.2,
   },
   buttonPressed: {
     opacity: 0.9,

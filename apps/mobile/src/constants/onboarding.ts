@@ -35,7 +35,11 @@ export const transportOptions: {
   { value: 'carpool', label: 'Carpool', emoji: '🚙' },
 ]
 
-export const housingOptions: { value: HousingType; label: string; emoji: string }[] = [
+export const housingOptions: {
+  value: HousingType
+  label: string
+  emoji: string
+}[] = [
   { value: 'dorm', label: 'Dorm', emoji: '🏫' },
   { value: 'apartment', label: 'Apartment', emoji: '🏢' },
   { value: 'house', label: 'House', emoji: '🏡' },
@@ -43,24 +47,7 @@ export const housingOptions: { value: HousingType; label: string; emoji: string 
 ]
 
 export const universities = [
-  'Stanford University',
-  'Harvard University',
-  'MIT',
-  'UC Berkeley',
-  'Yale University',
-  'Princeton University',
-  'Columbia University',
-  'University of Chicago',
-  'Cornell University',
-  'Duke University',
-  'Northwestern University',
-  'Brown University',
-  'Dartmouth College',
-  'University of Pennsylvania',
-  'Johns Hopkins University',
-  'California Institute of Technology',
-  'UCLA',
-  'USC',
-  'NYU',
-  'University of Michigan',
+  'Reykjavik University, Iceland',
+  'Unicorn University, Czechia',
+  'University of Würzburg, Germany',
 ].sort()
