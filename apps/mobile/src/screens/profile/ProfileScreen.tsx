@@ -56,7 +56,18 @@ export default function ProfileScreen() {
   }
 
   const handleSaveEdit = (value: string) => {
-    const updated = { ...userData, [editField]: value }
+    let updated = { ...userData }
+
+    if (editField === 'fullName') {
+      // Keep header name and full name in sync
+      updated = { ...updated, fullName: value, userName: value }
+    } else if (editField === 'userName') {
+      // Editing the header name should also reflect in full name
+      updated = { ...updated, userName: value, fullName: value }
+    } else {
+      updated = { ...updated, [editField]: value }
+    }
+
     setUserData(updated)
 
     if (editField === 'fullName' || editField === 'userName') {
@@ -73,6 +84,7 @@ export default function ProfileScreen() {
             }
       )
     }
+
     setIsEditModalOpen(false)
   }
 
