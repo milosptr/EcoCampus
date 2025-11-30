@@ -1,56 +1,48 @@
-import { z } from 'zod'
 import { createTRPCRouter, publicProcedure } from '../../trpc.js'
-
-const startOnboardingInputSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  universityCode: z.string().min(1),
-})
-
-type StartOnboardingInput = z.infer<typeof startOnboardingInputSchema>
-
-const verifyOnboardingCodeInputSchema = z.object({
-  onboardingId: z.string().cuid().optional(),
-  code: z.string().length(6),
-})
-
-type VerifyOnboardingCodeInput = z.infer<typeof verifyOnboardingCodeInputSchema>
-
-const loginInputSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-})
-
-type LoginInput = z.infer<typeof loginInputSchema>
+import { verifyJWTFromRequest } from '../../supabase.js'
 
 export const authRouter = createTRPCRouter({
-  status: publicProcedure.query(() => ({
-    isAuthenticated: false,
-    user: null,
-    note: 'TODO: Implement session lookup once auth system is wired up.',
-  })),
+  /**
+   * Check authentication status
+   * Returns user info if authenticated, null otherwise
+   */
+  status: publicProcedure.query(async ({ ctx }) => {
+    const auth = await verifyJWTFromRequest(ctx.req)
 
-  startOnboarding: publicProcedure
-    .input(startOnboardingInputSchema)
-    .mutation(({ input }: { input: StartOnboardingInput }) => ({
-      onboardingId: 'todo-onboarding-id',
-      nextStep: 'verifyEmail',
-      submitted: input,
-      note: 'TODO: Persist onboarding flow and send verification email.',
-    })),
+    if (!auth || !auth.userId) {
+      return {
+        isAuthenticated: false,
+        user: null,
+      }
+    }
 
-  verifyOnboardingCode: publicProcedure
-    .input(verifyOnboardingCodeInputSchema)
-    .mutation(({ input }: { input: VerifyOnboardingCodeInput }) => ({
-      success: false,
-      note: 'TODO: Validate verification codes via email/SMS provider.',
-    })),
+    const userProfile = await ctx.prisma.userProfile.findUnique({
+      where: {
+        authId: auth.userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+      },
+    })
 
-  login: publicProcedure
-    .input(loginInputSchema)
-    .mutation(({ input }: { input: LoginInput }) => ({
-      token: null,
-      note: 'TODO: Implement login and JWT issuance.',
-    })),
+    if (!userProfile) {
+      return {
+        isAuthenticated: false,
+        user: null,
+      }
+    }
+
+    return {
+      isAuthenticated: true,
+      user: {
+        id: userProfile.id,
+        email: userProfile.email,
+        name: userProfile.name,
+        avatarUrl: userProfile.avatarUrl,
+      },
+    }
+  }),
 })

@@ -1,108 +1,52 @@
-import { z } from 'zod'
 import { createTRPCRouter, publicProcedure } from '../../trpc.js'
 
-const leaderboardOverviewInputSchema = z.object({
-  campusId: z.string().min(1).default('thws'),
-  period: z
-    .object({
-      year: z
-        .number()
-        .int()
-        .min(2020)
-        .max(2100)
-        .default(new Date().getFullYear()),
-      month: z
-        .number()
-        .int()
-        .min(1)
-        .max(12)
-        .default(new Date().getMonth() + 1),
-    })
-    .default({
-      year: new Date().getFullYear(),
-      month: new Date().getMonth() + 1,
-    }),
-  userId: z.string().min(1).optional(),
-})
-
-type LeaderboardOverviewInput = z.infer<typeof leaderboardOverviewInputSchema>
-
-type LeaderboardEntry = {
-  userId: string
-  name: string
-  campusCode: string
-  points: number
-}
-
-type RankedEntry = LeaderboardEntry & { rank: number }
-
-const demoLeaderboardData: Record<string, LeaderboardEntry[]> = {
-  'thws-2025-11': [
-    { userId: 'baby', name: 'Baby Doe', campusCode: 'THWS', points: 2847 },
-    { userId: 'janie', name: 'Janie Doe', campusCode: 'THWS', points: 2634 },
-    { userId: 'johnny', name: 'Johnny Doe', campusCode: 'THWS', points: 2521 },
-    { userId: 'jane', name: 'Jane Doe', campusCode: 'THWS', points: 2156 },
-    { userId: 'alex', name: 'Alex Green', campusCode: 'THWS', points: 1900 },
-    { userId: 'sam', name: 'Sam Rivers', campusCode: 'THWS', points: 1730 },
-  ],
-}
-
-const rankEntries = (entries: LeaderboardEntry[]): RankedEntry[] => {
-  const sorted = [...entries].sort((a, b) => b.points - a.points)
-
-  return sorted.map((entry, index) => ({
-    ...entry,
-    rank: index + 1,
-  }))
-}
-
-const getKeyForInput = (input: LeaderboardOverviewInput): string => {
-  const { campusId, period } = input
-  return `${campusId.toLowerCase()}-${period.year}-${period.month.toString().padStart(2, '0')}`
-}
-
 export const leaderboardRouter = createTRPCRouter({
-  overview: publicProcedure
-    .input(leaderboardOverviewInputSchema.optional())
-    .query(({ input }) => {
-      const safeInput: LeaderboardOverviewInput = {
-        campusId: input?.campusId ?? 'thws',
-        period: input?.period ?? {
-          year: new Date().getFullYear(),
-          month: new Date().getMonth() + 1,
-        },
-        userId: input?.userId,
-      }
+  /**
+   * Monthly student leaderboard used by the mobile app
+   *
+   * NOTE: This currently returns static sample data that matches the
+   * leaderboard wireframes. Once action logging and points are
+   * implemented, replace this with a real Prisma aggregation query.
+   */
+  studentMonthly: publicProcedure.query(() => {
+    const periodLabel = 'November 2025'
 
-      const storageKey = getKeyForInput(safeInput)
-      const entries =
-        demoLeaderboardData[storageKey] ??
-        demoLeaderboardData['thws-2025-11'] ??
-        []
-      const rankedEntries = rankEntries(entries)
+    const rankings = [
+      { rank: 1, name: 'Baby Doe', university: 'THWS', points: 2847 },
+      { rank: 2, name: 'Janie Doe', university: 'THWS', points: 2634 },
+      { rank: 3, name: 'Johnny Doe', university: 'TUM', points: 2521 },
+      { rank: 4, name: 'John Doe', university: 'THWS', points: 2398 },
+      { rank: 5, name: 'Jane Doe', university: 'THWS', points: 2156 },
+      { rank: 6, name: 'Noah Davis', university: 'LMU', points: 2043 },
+      { rank: 7, name: 'Sophia Miller', university: 'THWS', points: 1987 },
+      { rank: 8, name: 'Liam Johnson', university: 'TUM', points: 1876 },
+      { rank: 9, name: 'Ava Martinez', university: 'LMU', points: 1754 },
+      { rank: 10, name: 'Ethan Garcia', university: 'THWS', points: 1698 },
+    ]
 
-      const topPerformers = rankedEntries.slice(0, 3)
+    const topPerformers = rankings.slice(0, 3).map((entry) => ({
+      rank: entry.rank,
+      name: entry.name,
+      initials: entry.name
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? '')
+        .join(''),
+      university: entry.university,
+      points: entry.points,
+    }))
 
-      const currentUser = safeInput.userId
-        ? rankedEntries.find((entry) => entry.userId === safeInput.userId)
-        : (rankedEntries[3] ?? rankedEntries[0])
+    const yourRank = {
+      ...rankings[4],
+      ecoLevel: 'Eco Level 3',
+    }
 
-      const periodLabel = new Intl.DateTimeFormat('en', {
-        month: 'long',
-        year: 'numeric',
-      }).format(new Date(safeInput.period.year, safeInput.period.month - 1, 1))
-
-      return {
-        period: {
-          label: periodLabel,
-          year: safeInput.period.year,
-          month: safeInput.period.month,
-        },
-        campusId: safeInput.campusId,
-        topPerformers,
-        currentUser,
-        allRankings: rankedEntries,
-        note: 'TODO: Replace with real aggregation from logged eco actions.',
-      }
-    }),
+    return {
+      periodLabel,
+      topPerformers,
+      yourRank,
+      rankings,
+    }
+  }),
 })

@@ -18,19 +18,22 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "dependencies": {
-    "@trpc/server": "^11.0.0",
     "@prisma/client": "^6.1.0",
-    "dotenv": "^16.4.5",
-    "superjson": "^2.2.4",
-    "zod": "^3.24.1",
+    "@supabase/supabase-js": "^2.84.0",
+    "@trpc/server": "^11.0.0",
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "superjson": "^2.2.4",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.10.5",
     "eslint": "^9.34.0",
     "prettier": "^3.6.2",

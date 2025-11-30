@@ -10,7 +10,12 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "typecheck": "tsc",
     "check-types": "turbo run check-types",
-    "test": "turbo lint check-types"
+    "test": "turbo lint check-types",
+    "db:generate": "npm run db:generate --workspace=server",
+    "db:push": "npm run db:push --workspace=server",
+    "db:push-ci": "npm run db:push --workspace=server -- --skip-generate",
+    "db:reset": "npm run db:push --workspace=server -- --force-reset",
+    "db:seed": "npm run db:seed --workspace=server"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
@@ -27,6 +32,8 @@
   ],
   "dependencies": {
     "@tamagui/core": "^1.136.1",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-svg": "^15.15.0",
     "tamagui": "^1.136.1"
   }
 }
