@@ -104,7 +104,6 @@ export default function LeaderboardScreen() {
             {...({
               fontSize: 20,
               fontWeight: '600',
-              color: Colors.white,
             } as any)}
           >
             Leaderboard
@@ -112,7 +111,6 @@ export default function LeaderboardScreen() {
           <Text
             {...({
               fontSize: 14,
-              color: 'rgba(255,255,255,0.85)',
             } as any)}
           >
             {data?.periodLabel ?? 'This Month'}
@@ -395,7 +393,6 @@ export default function LeaderboardScreen() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: Colors.primary,
     paddingHorizontal: 24,
     paddingTop: 18,
     paddingBottom: 18,
@@ -415,7 +412,6 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
