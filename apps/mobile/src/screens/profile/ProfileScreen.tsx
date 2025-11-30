@@ -6,21 +6,21 @@ import { ScrollView } from 'react-native'
 import { YStack } from 'tamagui'
 import { useRouter, type Href } from 'expo-router'
 
-
-
-
 // 🔹 Diese Komponenten kommen aus deinem components-Ordner:
 import { ProfileHeader } from './components/ProfileHeader'
 import { ProfileImageUploadDialog } from './components/ProfileImageUploadDialog'
 import { InfoList } from './components/InfoList'
 import { SettingsList } from './components/SettingsList'
 import { ImpactCard } from './components/ImpactCard'
+import { useMainStore } from '@/src/store/useMainStore'
 
 // Falls du Modals brauchst (z. B. beim Button-Klick im ProfileHeader):
 import { EditModal } from './components/EditModal'
 import { DeleteAccountModal } from './components/DeleteAccountModal'
 
 export default function ProfileScreen() {
+  const userProfile = useMainStore((state) => state.userProfile)
+  const setUserProfile = useMainStore((state) => state.setUserProfile)
   // State for modals and user data
   const [isImageUploadOpen, setIsImageUploadOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -28,17 +28,17 @@ export default function ProfileScreen() {
   const [editField, setEditField] = useState('')
   const [editValue, setEditValue] = useState('')
 
-  // Mock user data - replace with actual data from your state management
   const [userData, setUserData] = useState({
-    userName: 'Maria Klein',
+    userName: userProfile?.name ?? 'EcoCampus User',
     university: 'TU Munich',
     ecoLevel: 5,
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    fullName: 'Maria Klein',
+    avatarUrl:
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
+    fullName: userProfile?.name ?? 'EcoCampus User',
     age: '22',
     gender: 'Female',
     distance: '5 km',
-    transport: 'Bike'
+    transport: 'Bike',
   })
 
   const [settings, setSettings] = useState({
@@ -46,7 +46,7 @@ export default function ProfileScreen() {
     weeklyReports: true,
     leaderboardUpdates: false,
     dataSharing: true,
-    analyticsTracking: false
+    analyticsTracking: false,
   })
 
   const handleEditField = (field: string, value: string) => {
@@ -56,7 +56,35 @@ export default function ProfileScreen() {
   }
 
   const handleSaveEdit = (value: string) => {
-    setUserData({ ...userData, [editField]: value })
+    let updated = { ...userData }
+
+    if (editField === 'fullName') {
+      // Keep header name and full name in sync
+      updated = { ...updated, fullName: value, userName: value }
+    } else if (editField === 'userName') {
+      // Editing the header name should also reflect in full name
+      updated = { ...updated, userName: value, fullName: value }
+    } else {
+      updated = { ...updated, [editField]: value }
+    }
+
+    setUserData(updated)
+
+    if (editField === 'fullName' || editField === 'userName') {
+      setUserProfile(
+        userProfile
+          ? { ...userProfile, name: value }
+          : {
+              id: 'local-profile',
+              authId: 'local-profile',
+              email: 'guest@ecocampus.app',
+              name: value,
+              avatarUrl: null,
+              onboardingCompleted: true,
+            }
+      )
+    }
+
     setIsEditModalOpen(false)
   }
 
@@ -70,12 +98,9 @@ export default function ProfileScreen() {
 
   const router = useRouter()
 
-const handleNavigate = (screen: string) => {
-  router.push(screen as Href)
-}
-
-
-
+  const handleNavigate = (screen: string) => {
+    router.push(screen as Href)
+  }
 
   const handleDeleteAccount = () => {
     console.log('Account deleted')
@@ -86,8 +111,16 @@ const handleNavigate = (screen: string) => {
     { label: 'Full Name', value: userData.fullName, field: 'fullName' },
     { label: 'Age', value: userData.age, field: 'age' },
     { label: 'Gender', value: userData.gender, field: 'gender' },
-    { label: 'Distance from Campus', value: userData.distance, field: 'distance' },
-    { label: 'Primary Transport Mode', value: userData.transport, field: 'transport' }
+    {
+      label: 'Distance from Campus',
+      value: userData.distance,
+      field: 'distance',
+    },
+    {
+      label: 'Primary Transport Mode',
+      value: userData.transport,
+      field: 'transport',
+    },
   ]
 
   return (
@@ -101,10 +134,9 @@ const handleNavigate = (screen: string) => {
           paddingHorizontal: 16,
           minHeight: '100%',
         }}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps='handled'
         showsVerticalScrollIndicator={true}
       >
-
         <YStack
           {...({
             width: '100%',
@@ -114,7 +146,6 @@ const handleNavigate = (screen: string) => {
             minHeight: '100%',
           } as any)}
         >
-
           {/* 🔹 Profilkopf mit Bild, Name, evtl. Bearbeiten-Button */}
           <ProfileHeader
             onBack={() => console.log('Back')}
@@ -132,14 +163,14 @@ const handleNavigate = (screen: string) => {
 
           {/* 🔹 Kleine Zusammenfassung, z. B. Punkte, Fortschritt */}
           <ImpactCard
-            co2Saved="42 kg"
-            actionsLogged="156"
-            leaderboardRank="#12 in TU Munich"
+            co2Saved='42 kg'
+            actionsLogged='156'
+            leaderboardRank='#12 in TU Munich'
             progressValue={75}
-            onViewProgress={() => router.push('/(tabs)/personal-progress' as const)}
+            onViewProgress={() =>
+              router.push('/(tabs)/personal-progress' as const)
+            }
           />
-
-
 
           {/* 🔹 Modals (werden nur angezeigt, wenn aktiv) */}
           <ProfileImageUploadDialog
