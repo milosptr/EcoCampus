@@ -1,4 +1,11 @@
-import { Modal, View, Text, Pressable, ScrollView, StyleSheet } from 'react-native'
+import {
+  Modal,
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+} from 'react-native'
 import type { ReactNode } from 'react'
 import { Feather } from '@expo/vector-icons'
 import { Colors } from '@/src/constants/Colors'
@@ -20,7 +27,7 @@ export function ModalWrapper({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType='fade'
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
@@ -34,7 +41,7 @@ export function ModalWrapper({
                 pressed && styles.closeButtonPressed,
               ]}
             >
-              <Feather name="x" size={22} color={Colors.primary} />
+              <Feather name='x' size={22} color={Colors.primary} />
             </Pressable>
           </View>
           <ScrollView
@@ -62,6 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 24,
     padding: 20,
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

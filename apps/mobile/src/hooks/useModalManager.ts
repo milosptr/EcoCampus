@@ -6,6 +6,8 @@ export type ModalType =
   | 'units'
   | 'language'
   | 'faq'
+  | 'terms'
+  | 'privacy'
   | 'editProfile'
   | 'deleteAccount'
   | 'imageUpload'

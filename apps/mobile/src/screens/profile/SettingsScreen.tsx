@@ -8,124 +8,28 @@ import { useSettings } from '@/src/hooks/useSettings'
 import { useModalManager } from '@/src/hooks/useModalManager'
 import { SettingsList } from './components/SettingsList'
 import { signOut } from '@/src/lib/signOut'
-
-// Simple placeholder pages for modals
-function EditEmailPage() {
-  return (
-    <View style={modalPageStyles.container}>
-      <Text style={modalPageStyles.text}>
-        Email editing functionality coming soon.
-      </Text>
-    </View>
-  )
-}
-
-function FAQPage() {
-  return (
-    <View style={modalPageStyles.container}>
-      <Text style={modalPageStyles.title}>Frequently Asked Questions</Text>
-      <Text style={modalPageStyles.text}>
-        Q: How do I track my eco actions?{'\n'}
-        A: Use the dashboard to log your daily sustainable activities.
-      </Text>
-      <Text style={modalPageStyles.text}>
-        Q: How are points calculated?{'\n'}
-        A: Points are based on CO2 savings from research data.
-      </Text>
-    </View>
-  )
-}
-
-function LanguagePage({
-  currentLanguage,
-  onSelect,
-}: {
-  currentLanguage: string
-  onSelect: (lang: string) => void
-}) {
-  const languages = ['English', 'Deutsch', 'Español', 'Français']
-  return (
-    <View style={modalPageStyles.container}>
-      {languages.map((lang) => (
-        <Pressable
-          key={lang}
-          onPress={() => onSelect(lang)}
-          style={({ pressed }) => [
-            modalPageStyles.option,
-            currentLanguage === lang && modalPageStyles.optionSelected,
-            pressed && modalPageStyles.optionPressed,
-          ]}
-        >
-          <Text
-            style={[
-              modalPageStyles.optionText,
-              currentLanguage === lang && modalPageStyles.optionTextSelected,
-            ]}
-          >
-            {lang}
-          </Text>
-          {currentLanguage === lang && (
-            <Feather name="check" size={18} color={Colors.primary} />
-          )}
-        </Pressable>
-      ))}
-    </View>
-  )
-}
-
-function UnitsPage({
-  currentUnit,
-  onSelect,
-}: {
-  currentUnit: string
-  onSelect: (unit: string) => void
-}) {
-  const units = ['Metric (km)', 'Imperial (mi)']
-  return (
-    <View style={modalPageStyles.container}>
-      {units.map((unit) => (
-        <Pressable
-          key={unit}
-          onPress={() => onSelect(unit)}
-          style={({ pressed }) => [
-            modalPageStyles.option,
-            currentUnit === unit && modalPageStyles.optionSelected,
-            pressed && modalPageStyles.optionPressed,
-          ]}
-        >
-          <Text
-            style={[
-              modalPageStyles.optionText,
-              currentUnit === unit && modalPageStyles.optionTextSelected,
-            ]}
-          >
-            {unit}
-          </Text>
-          {currentUnit === unit && (
-            <Feather name="check" size={18} color={Colors.primary} />
-          )}
-        </Pressable>
-      ))}
-    </View>
-  )
-}
-
-function ContactSupportPage() {
-  return (
-    <View style={modalPageStyles.container}>
-      <Text style={modalPageStyles.text}>
-        For support, please email us at:{'\n'}
-        support@ecocampus.app
-      </Text>
-    </View>
-  )
-}
+import { useMainStore } from '@/src/store/useMainStore'
+import { EditEmailPage } from './subpages/EditEmailPage'
+import { FAQPage } from './subpages/FAQPage'
+import { LanguagePage } from './subpages/LanguagePage'
+import { UnitsPage } from './subpages/UnitsPage'
+import { ContactSupportPage } from './subpages/ContactSupportPage'
+import { TermsPage } from './subpages/TermsPage'
+import { PrivacyPage } from './subpages/PrivacyPage'
 
 export default function SettingsScreen() {
   const router = useRouter()
-  const { settings, toggleSetting, unitSystem, setUnitSystem, language, setLanguage } =
-    useSettings()
+  const {
+    settings,
+    toggleSetting,
+    unitSystem,
+    setUnitSystem,
+    language,
+    setLanguage,
+  } = useSettings()
   const { activeModal, openModal, closeModal } = useModalManager()
+  const userProfile = useMainStore((state) => state.userProfile)
+  const currentEmail = userProfile?.email || ''
 
   const handleNavigate = (screen: string) => {
     switch (screen) {
@@ -143,6 +47,12 @@ export default function SettingsScreen() {
         break
       case 'faq':
         openModal('faq')
+        break
+      case 'terms':
+        openModal('terms')
+        break
+      case 'privacy':
+        openModal('privacy')
         break
       default:
         console.warn('Unknown settings target:', screen)
@@ -178,7 +88,7 @@ export default function SettingsScreen() {
               pressed && styles.backButtonPressed,
             ]}
           >
-            <Feather name="chevron-left" size={20} color={Colors.primary} />
+            <Feather name='chevron-left' size={20} color={Colors.primary} />
           </Pressable>
 
           <Text style={styles.headerTitle}>Settings</Text>
@@ -226,15 +136,21 @@ export default function SettingsScreen() {
       {/* Modals */}
       <ModalWrapper
         visible={activeModal === 'editEmail'}
-        title="Edit Email"
+        title='Edit Email'
         onClose={closeModal}
       >
-        <EditEmailPage />
+        <EditEmailPage
+          currentEmail={currentEmail}
+          onSave={(email) => {
+            console.log('Email saved:', email)
+            closeModal()
+          }}
+        />
       </ModalWrapper>
 
       <ModalWrapper
         visible={activeModal === 'support'}
-        title="Contact Support"
+        title='Contact Support'
         onClose={closeModal}
       >
         <ContactSupportPage />
@@ -242,7 +158,7 @@ export default function SettingsScreen() {
 
       <ModalWrapper
         visible={activeModal === 'units'}
-        title="Units"
+        title='Units'
         onClose={closeModal}
       >
         <UnitsPage
@@ -256,7 +172,7 @@ export default function SettingsScreen() {
 
       <ModalWrapper
         visible={activeModal === 'language'}
-        title="Language"
+        title='Language'
         onClose={closeModal}
       >
         <LanguagePage
@@ -270,10 +186,26 @@ export default function SettingsScreen() {
 
       <ModalWrapper
         visible={activeModal === 'faq'}
-        title="FAQ"
+        title='FAQ'
         onClose={closeModal}
       >
         <FAQPage />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'terms'}
+        title='Terms of Service'
+        onClose={closeModal}
+      >
+        <TermsPage />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'privacy'}
+        title='Privacy Policy'
+        onClose={closeModal}
+      >
+        <PrivacyPage />
       </ModalWrapper>
     </View>
   )
@@ -342,48 +274,5 @@ const styles = StyleSheet.create({
     color: Colors.error,
     textAlign: 'center',
     paddingVertical: 8,
-  },
-})
-
-const modalPageStyles = StyleSheet.create({
-  container: {
-    paddingVertical: 8,
-    gap: 12,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.primary,
-    marginBottom: 8,
-  },
-  text: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 12,
-  },
-  optionSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryLight,
-  },
-  optionPressed: {
-    opacity: 0.7,
-  },
-  optionText: {
-    fontSize: 15,
-    color: Colors.text,
-  },
-  optionTextSelected: {
-    color: Colors.primary,
-    fontWeight: '500',
   },
 })
