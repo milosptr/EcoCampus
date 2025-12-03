@@ -1,10 +1,12 @@
+import React from 'react'
 import { Feather } from '@expo/vector-icons'
 import { YStack, XStack, Text, Separator } from 'tamagui'
 import { TouchableOpacity } from 'react-native'
-import { Link } from 'expo-router'
-import { Switch } from 'react-native'
+import { Toggle } from '../ui/toggle'
 
-interface SettingsListProps {
+
+// 🔹 Props-Typ für SettingsList
+export interface SettingsListProps {
   settings: {
     dailyReminders: boolean
     weeklyReports: boolean
@@ -18,6 +20,7 @@ interface SettingsListProps {
   onNavigate: (screen: string) => void
 }
 
+// 🔹 Haupt-Component
 export function SettingsList({
   settings,
   unitSystem,
@@ -26,6 +29,7 @@ export function SettingsList({
   onNavigate,
 }: SettingsListProps) {
   if (!settings) return null
+
   return (
     <YStack
       {...({
@@ -59,18 +63,18 @@ export function SettingsList({
         </Text>
 
         <SettingsButton
-          icon='lock'
-          label='Change Password'
+          icon="lock"
+          label="Change Password"
           onPress={() => onNavigate('change-password')}
         />
         <SettingsButton
-          icon='globe'
-          label='Manage Login Methods'
+          icon="globe"
+          label="Manage Login Methods"
           onPress={() => onNavigate('login-methods')}
         />
         <SettingsButton
-          icon='lock'
-          label='Edit Email'
+          icon="lock"
+          label="Edit Email"
           onPress={() => onNavigate('edit-email')}
           showDivider={false}
         />
@@ -100,19 +104,25 @@ export function SettingsList({
         </Text>
 
         <ToggleRow
-          label='Daily Reminders'
+          label="Daily Reminders"
           checked={settings.dailyReminders}
-          onCheckedChange={(checked) => onToggle('dailyReminders', checked)}
+          onCheckedChange={(checked) =>
+            onToggle('dailyReminders', Boolean(checked))
+          }
         />
         <ToggleRow
-          label='Weekly Reports'
+          label="Weekly Reports"
           checked={settings.weeklyReports}
-          onCheckedChange={(checked) => onToggle('weeklyReports', checked)}
+          onCheckedChange={(checked) =>
+            onToggle('weeklyReports', Boolean(checked))
+          }
         />
         <ToggleRow
-          label='Leaderboard Updates'
+          label="Leaderboard Updates"
           checked={settings.leaderboardUpdates}
-          onCheckedChange={(checked) => onToggle('leaderboardUpdates', checked)}
+          onCheckedChange={(checked) =>
+            onToggle('leaderboardUpdates', Boolean(checked))
+          }
           showDivider={false}
         />
       </YStack>
@@ -141,14 +151,18 @@ export function SettingsList({
         </Text>
 
         <ToggleRow
-          label='Data Sharing with University'
+          label="Data Sharing with University"
           checked={settings.dataSharing}
-          onCheckedChange={(checked) => onToggle('dataSharing', checked)}
+          onCheckedChange={(checked) =>
+            onToggle('dataSharing', Boolean(checked))
+          }
         />
         <ToggleRow
-          label='Analytics Tracking'
+          label="Analytics Tracking"
           checked={settings.analyticsTracking}
-          onCheckedChange={(checked) => onToggle('analyticsTracking', checked)}
+          onCheckedChange={(checked) =>
+            onToggle('analyticsTracking', Boolean(checked))
+          }
           showDivider={false}
         />
       </YStack>
@@ -177,14 +191,14 @@ export function SettingsList({
         </Text>
 
         <SettingsButton
-          icon='globe'
-          label='Units'
+          icon="globe"
+          label="Units"
           value={unitSystem}
           onPress={() => onNavigate('units')}
         />
         <SettingsButton
-          icon='globe'
-          label='Language'
+          icon="globe"
+          label="Language"
           value={language}
           onPress={() => onNavigate('language')}
           showDivider={false}
@@ -215,23 +229,23 @@ export function SettingsList({
         </Text>
 
         <SettingsButton
-          icon='help-circle'
-          label='FAQ'
+          icon="help-circle"
+          label="FAQ"
           onPress={() => onNavigate('faq')}
         />
         <SettingsButton
-          icon='help-circle'
-          label='Contact Support'
+          icon="help-circle"
+          label="Contact Support"
           onPress={() => onNavigate('support')}
         />
         <SettingsButton
-          icon='shield'
-          label='Terms of Service'
+          icon="shield"
+          label="Terms of Service"
           onPress={() => onNavigate('terms')}
         />
         <SettingsButton
-          icon='shield'
-          label='Privacy Policy'
+          icon="shield"
+          label="Privacy Policy"
           onPress={() => onNavigate('privacy')}
           showDivider={false}
         />
@@ -239,6 +253,7 @@ export function SettingsList({
     </YStack>
   )
 }
+
 
 function SettingsButton({
   icon,
@@ -265,8 +280,13 @@ function SettingsButton({
           } as any)}
         >
           <XStack {...({ alignItems: 'center', gap: '$3' } as any)}>
-            <Feather name={icon as any} size={20} color='#5F7E68' />
-            <Text {...({ fontSize: '$4', color: '#5F7E68' } as any)}>
+            <Feather name={icon as any} size={20} color="#5F7E68" />
+            <Text
+              {...({
+                fontSize: '$4',
+                color: '#5F7E68',
+              } as any)}
+            >
               {label}
             </Text>
           </XStack>
@@ -274,19 +294,30 @@ function SettingsButton({
           <XStack {...({ alignItems: 'center', gap: '$2' } as any)}>
             {value && (
               <Text
-                {...({ fontSize: '$2', color: '#5F7E68', opacity: 0.5 } as any)}
+                {...({
+                  fontSize: '$2',
+                  color: '#5F7E68',
+                  opacity: 0.5,
+                } as any)}
               >
                 {value}
               </Text>
             )}
-            <Feather name='chevron-right' size={20} color='#9DBFA8' />
+            <Feather name="chevron-right" size={20} color="#9DBFA8" />
           </XStack>
         </XStack>
       </TouchableOpacity>
-      {showDivider && <Separator {...({ marginVertical: '$1' } as any)} />}
+      {showDivider && (
+        <Separator
+          {...({
+            marginVertical: '$1',
+          } as any)}
+        />
+      )}
     </YStack>
   )
 }
+
 
 function ToggleRow({
   label,
@@ -303,16 +334,35 @@ function ToggleRow({
     <YStack>
       <XStack
         {...({
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: '$2',
-          paddingVertical: '$3',
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: "$2",
+          paddingVertical: "$3",
         } as any)}
       >
-        <Text {...({ fontSize: '$4', color: '#5F7E68' } as any)}>{label}</Text>
-        <Switch value={checked} onValueChange={onCheckedChange} />
+        <Text
+          {...({
+            fontSize: "$4",
+            color: "#5F7E68",
+          } as any)}
+        >
+          {label}
+        </Text>
+
+        
+        <Toggle
+          value={checked}
+          onValueChange={(val) => onCheckedChange(Boolean(val))}
+        />
       </XStack>
-      {showDivider && <Separator {...({ marginVertical: '$1' } as any)} />}
+
+      {showDivider && (
+        <Separator
+          {...({
+            marginVertical: "$1",
+          } as any)}
+        />
+      )}
     </YStack>
-  )
+  );
 }
