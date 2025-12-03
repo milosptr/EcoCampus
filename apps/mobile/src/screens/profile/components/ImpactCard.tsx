@@ -1,164 +1,252 @@
-import { Feather } from "@expo/vector-icons";
-import { YStack, XStack, Text, Button } from "tamagui";
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { MotiView } from 'moti'
+import { Feather } from '@expo/vector-icons'
+import { Colors } from '@/src/constants/Colors'
+import { TrendIndicator } from '@/src/components'
+import type { ImpactStats } from '@/src/hooks/useProfile'
 
 interface ImpactCardProps {
-  co2Saved: string;
-  actionsLogged: string;
-  leaderboardRank: string;
-  progressValue: number;
-  onViewProgress: () => void;
+  stats: ImpactStats
+  onViewProgress: () => void
 }
 
-export function ImpactCard({
-  co2Saved,
-  actionsLogged,
-  leaderboardRank,
-  progressValue,
-  onViewProgress,
-}: ImpactCardProps) {
+export function ImpactCard({ stats, onViewProgress }: ImpactCardProps) {
   return (
-    <YStack
-      {...({
-        marginHorizontal: "$4",
-        marginTop: "$6",
-        backgroundColor: "white",
-        borderRadius: "$8",
-        padding: "$6",
-        shadowColor: "$shadowColor",
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-      } as any)}
+    <MotiView
+      from={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'timing', duration: 500, delay: 300 }}
     >
-      <Text
-        {...({
-          fontSize: "$7",
-          fontWeight: "600",
-          color: "#5F7E68",
-          marginBottom: "$4",
-        } as any)}
-      >
-        Your Impact
-      </Text>
-
-      <YStack {...({ gap: "$4" } as any)}>
-        {/* Stats Grid */}
-        <XStack {...({ gap: "$4" } as any)}>
-          <YStack
-            {...({
-              flex: 1,
-              borderRadius: "$6",
-              padding: "$4",
-              backgroundColor: "#F6F9F2",
-            } as any)}
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Impact</Text>
+          <Pressable
+            onPress={onViewProgress}
+            style={({ pressed }) => [
+              styles.viewAllButton,
+              pressed && styles.viewAllButtonPressed,
+            ]}
           >
-            <Feather name="feather" size={20} color="#5F7E68" style={{ marginBottom: 8 }} />
-            <Text {...({ fontSize: "$3", color: "#5F7E68", opacity: 0.7 } as any)}>CO₂ Saved</Text>
-            <Text
-              {...({
-                fontSize: "$7",
-                fontWeight: "600",
-                color: "#5F7E68",
-                marginTop: "$1",
-              } as any)}
-            >
-              {co2Saved}
-            </Text>
-          </YStack>
+            <Text style={styles.viewAllText}>View Details</Text>
+            <Feather name="chevron-right" size={16} color={Colors.primary} />
+          </Pressable>
+        </View>
 
-          <YStack
-            {...({
-              flex: 1,
-              borderRadius: "$6",
-              padding: "$4",
-              backgroundColor: "#F6F9F2",
-            } as any)}
-          >
-            <Feather name="trending-up" size={20} color="#5F7E68" style={{ marginBottom: 8 }} />
-            <Text {...({ fontSize: "$3", color: "#5F7E68", opacity: 0.7 } as any)}>Actions</Text>
-            <Text
-              {...({
-                fontSize: "$7",
-                fontWeight: "600",
-                color: "#5F7E68",
-                marginTop: "$1",
-              } as any)}
-            >
-              {actionsLogged}
-            </Text>
-          </YStack>
-        </XStack>
-
-        {/* Leaderboard Rank */}
-        <YStack
-          {...({
-            borderRadius: "$6",
-            padding: "$4",
-            backgroundColor: "#F6F9F2",
-          } as any)}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <XStack
-            {...({
-              alignItems: "center",
-              gap: "$2",
-              marginBottom: "$2",
-            } as any)}
+          {/* CO2 Saved Card */}
+          <MotiView
+            from={{ translateY: 20, opacity: 0 }}
+            animate={{ translateY: 0, opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 400 }}
           >
-            <Feather name="award" size={20} color="#5F7E68" />
-            <Text {...({ fontSize: "$3", color: "#5F7E68", opacity: 0.7 } as any)}>
-              Leaderboard Rank
-            </Text>
-          </XStack>
-          <Text {...({ fontSize: "$6", fontWeight: "600", color: "#5F7E68" } as any)}>
-            {leaderboardRank}
-          </Text>
-        </YStack>
+            <View style={styles.statCard}>
+              <View style={[styles.iconContainer, { backgroundColor: Colors.primaryLight }]}>
+                <Feather name="wind" size={20} color={Colors.primary} />
+              </View>
+              <Text style={styles.statValue}>
+                {stats.co2Saved}
+                <Text style={styles.statUnit}> {stats.co2Unit}</Text>
+              </Text>
+              <Text style={styles.statLabel}>CO₂ Saved</Text>
+              <View style={styles.trendContainer}>
+                <TrendIndicator
+                  value={stats.co2Trend.isPositive ? stats.co2Trend.value : -stats.co2Trend.value}
+                  size="small"
+                  suffix=""
+                />
+                <Text style={styles.trendLabel}>{stats.co2Trend.label}</Text>
+              </View>
+            </View>
+          </MotiView>
 
-        {/* Progress Bar */}
-        <YStack>
-          <XStack
-            {...({
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "$2",
-            } as any)}
+          {/* Rank Card */}
+          <MotiView
+            from={{ translateY: 20, opacity: 0 }}
+            animate={{ translateY: 0, opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 500 }}
           >
-            <Text {...({ fontSize: "$2", color: "#5F7E68", opacity: 0.7 } as any)}>Weekly Goal</Text>
-            <Text {...({ fontSize: "$2", color: "#5F7E68" } as any)}>{progressValue}%</Text>
-          </XStack>
-          <YStack
-            {...({
-              height: 8,
-              width: "100%",
-              borderRadius: "$10",
-              backgroundColor: "#F6F9F2",
-              overflow: "hidden",
-            } as any)}
+            <View style={styles.statCard}>
+              <View style={[styles.iconContainer, { backgroundColor: Colors.goldLight }]}>
+                <Feather name="award" size={20} color={Colors.gold} />
+              </View>
+              <Text style={styles.statValue}>#{stats.leaderboardRank}</Text>
+              <Text style={styles.statLabel}>Leaderboard</Text>
+              <View style={styles.trendContainer}>
+                <TrendIndicator
+                  value={stats.rankTrend.isPositive ? stats.rankTrend.value : -stats.rankTrend.value}
+                  size="small"
+                  suffix=""
+                />
+                <Text style={styles.trendLabel}>{stats.rankTrend.label}</Text>
+              </View>
+            </View>
+          </MotiView>
+
+          {/* Actions Card */}
+          <MotiView
+            from={{ translateY: 20, opacity: 0 }}
+            animate={{ translateY: 0, opacity: 1 }}
+            transition={{ type: 'timing', duration: 400, delay: 600 }}
           >
-            <YStack
-              {...({
-                height: "100%",
-                width: `${progressValue}%`,
-                borderRadius: "$10",
-                backgroundColor: "#E8F89C",
-              } as any)}
+            <View style={styles.statCard}>
+              <View style={[styles.iconContainer, { backgroundColor: Colors.tertiaryLight }]}>
+                <Feather name="check-circle" size={20} color={Colors.tertiary} />
+              </View>
+              <Text style={styles.statValue}>{stats.actionsLogged}</Text>
+              <Text style={styles.statLabel}>Actions</Text>
+              <View style={styles.trendContainer}>
+                <TrendIndicator
+                  value={stats.actionsTrend.isPositive ? stats.actionsTrend.value : -stats.actionsTrend.value}
+                  size="small"
+                  suffix=""
+                />
+                <Text style={styles.trendLabel}>{stats.actionsTrend.label}</Text>
+              </View>
+            </View>
+          </MotiView>
+        </ScrollView>
+
+        {/* Weekly Goal Progress */}
+        <View style={styles.progressSection}>
+          <View style={styles.progressHeader}>
+            <View style={styles.progressLabelRow}>
+              <Feather name="target" size={16} color={Colors.primary} />
+              <Text style={styles.progressLabel}>Weekly Goal</Text>
+            </View>
+            <Text style={styles.progressPercentage}>{stats.progressValue}%</Text>
+          </View>
+          <View style={styles.progressBarBackground}>
+            <MotiView
+              from={{ width: '0%' }}
+              animate={{ width: `${stats.progressValue}%` }}
+              transition={{ type: 'timing', duration: 800, delay: 500 }}
+              style={styles.progressBarFill}
             />
-          </YStack>
-        </YStack>
-
-        {/* CTA Button */}
-        <Button
-          onPress={onViewProgress}
-          {...({
-            borderRadius: "$6",
-            height: 48,
-            backgroundColor: "#5F7E68",
-            color: "white",
-            pressStyle: { opacity: 0.8 },
-          } as any)}
-        >
-          View Detailed Progress
-        </Button>
-      </YStack>
-    </YStack>
-  );
+          </View>
+        </View>
+      </View>
+    </MotiView>
+  )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: 16,
+    marginTop: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  viewAllButtonPressed: {
+    opacity: 0.7,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.primary,
+  },
+  scrollContent: {
+    gap: 12,
+    paddingRight: 16,
+  },
+  statCard: {
+    width: 140,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  statUnit: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  trendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  trendLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  progressSection: {
+    marginTop: 20,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.text,
+  },
+  progressPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  progressBarBackground: {
+    height: 8,
+    width: '100%',
+    borderRadius: 4,
+    backgroundColor: Colors.backgroundMuted,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: Colors.primary,
+  },
+})

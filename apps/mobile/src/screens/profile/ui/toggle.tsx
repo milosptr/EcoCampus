@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { Pressable, Animated, StyleSheet } from "react-native";
 
-interface ToggleProps {
+export interface ToggleProps {
   value: boolean;
   onValueChange: (val: boolean) => void;
+  variant?: 'default' | 'outline';
+  size?: 'default' | 'sm' | 'lg';
 }
 
 export function Toggle({ value, onValueChange }: ToggleProps) {
