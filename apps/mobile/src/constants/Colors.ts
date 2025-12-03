@@ -69,4 +69,30 @@ export const Colors = {
   googleBlue: '#4285F4',
   googleBorder: '#DADCE0',
   googleText: '#3C4043',
+
+  // ═══════════════════════════════════════════════════════════
+  // RANK COLORS (Leaderboard podium)
+  // ═══════════════════════════════════════════════════════════
+  gold: '#FFD700',
+  goldLight: '#FFF8E1',
+  silver: '#C0C0C0',
+  silverLight: '#F5F5F5',
+  bronze: '#CD7F32',
+  bronzeLight: '#FBE9E7',
+
+  // ═══════════════════════════════════════════════════════════
+  // TREND COLORS (Stats indicators)
+  // ═══════════════════════════════════════════════════════════
+  trendUp: '#4CAF50',
+  trendDown: '#FC6E53',
+  trendNeutral: '#9E9E9E',
+} as const
+
+// Gradient arrays for LinearGradient components
+export const Gradients = {
+  primary: ['#568366', '#93C3A6'],
+  gold: ['#FFD700', '#FFA500'],
+  silver: ['#E8E8E8', '#C0C0C0'],
+  bronze: ['#CD7F32', '#8B5A2B'],
+  heroCard: ['#E8F5E9', '#FFFFFF'],
 } as const

@@ -1,288 +1,187 @@
-import React, { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { View, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native'
-import { YStack } from 'tamagui'
 import { useRouter, type Href } from 'expo-router'
-import { supabase } from '@/src/lib/supabase'
-import { BackgroundPattern } from '@/src/shapes/BackgroundPattern'
-import { Colors } from '@/src/constants/Colors'  
+import { Colors } from '@/src/constants/Colors'
+import { useProfile } from '@/src/hooks/useProfile'
+import { useModalManager } from '@/src/hooks/useModalManager'
 import { ProfileHeader } from './components/ProfileHeader'
-import { ProfileImageUploadDialog } from './components/ProfileImageUploadDialog'
-import { InfoList } from './components/InfoList'
+import { InfoList, type InfoCategory } from './components/InfoList'
 import { ImpactCard } from './components/ImpactCard'
-import { useMainStore } from '@/src/store/useMainStore'
-import { View } from 'react-native'
+import { QuickActions } from './components/QuickActions'
 import { EditModal } from './components/EditModal'
 import { DeleteAccountModal } from './components/DeleteAccountModal'
+import { ProfileImageUploadDialog } from './components/ProfileImageUploadDialog'
 
 export default function ProfileScreen() {
+  const router = useRouter()
+  const { userData, impactStats, updateProfileField, updateAvatar } =
+    useProfile()
+  const { activeModal, openModal, closeModal } = useModalManager()
 
-  const userProfile = useMainStore((state) => state.userProfile)
-  const setUserProfile = useMainStore((state) => state.setUserProfile)
-  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [editField, setEditField] = useState('')
   const [editValue, setEditValue] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
-
-
-  const [userData, setUserData] = useState({
-    userName: userProfile?.name ?? 'EcoCampus User',
-    university: 'TU Munich',
-    ecoLevel: 5,
-    avatarUrl:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    fullName: userProfile?.name ?? 'EcoCampus User',
-    age: '22',
-    gender: 'Female',
-    distance: '5 km',
-    transport: 'Bike',
-  })
-
-  const [settings, setSettings] = useState({
-    dailyReminders: true,
-    weeklyReports: true,
-    leaderboardUpdates: false,
-    dataSharing: true,
-    analyticsTracking: false,
-  })
-
-    React.useEffect(() => {
-      loadProfile()
-    }, [])
-
-    async function loadProfile() {
-      setLoading(true)
-
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        console.warn("No user logged in")
-        setLoading(false)
-        return
-      }
-
-      setUserId(user.id)
-
-      const { data: profileData } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      const { data: settingsData } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (profileData) {
-        setUserData({
-          userName: profileData.user_name || '',
-          university: profileData.university || '',
-          ecoLevel: profileData.eco_level || 0,
-          avatarUrl: profileData.avatar_url || '',
-          fullName: profileData.full_name || '',
-          age: profileData.age || '',
-          gender: profileData.gender || '',
-          distance: profileData.distance_from_campus || '',
-          transport: profileData.transport_mode || ''
-        })
-      }
-
-      if (settingsData) {
-        setSettings({
-          dailyReminders: settingsData.daily_reminders,
-          weeklyReports: settingsData.weekly_reports,
-          leaderboardUpdates: settingsData.leaderboard_updates,
-          dataSharing: settingsData.data_sharing,
-          analyticsTracking: settingsData.analytics_tracking
-        })
-      }
-
-      setLoading(false)
-    }
-
 
   const handleEditField = (field: string, value: string) => {
     setEditField(field)
     setEditValue(value)
-    setIsEditModalOpen(true)
+    openModal('editProfile')
   }
 
-  const handleSaveEdit = async (value: string) => {
-    if (!userId) {
-      console.warn("Not logged in — cannot save in Supabase.");
-      return;
-    }
-
-    // Mapping von UI-Feld -> Supabase-Feld
-    const fieldMap: Record<string, string> = {
-      fullName: 'full_name',
-      age: 'age',
-      gender: 'gender',
-      distance: 'distance_from_campus',
-      transport: 'transport_mode',
-    };
-
-    const dbField = fieldMap[editField];
-
-    if (!dbField) {
-      console.warn("Unknown profile field:", editField);
-      return;
-    }
-
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ [dbField]: value, updated_at: new Date().toISOString() })
-      .eq('id', userId);
-
-    if (error) {
-      console.error("Supabase update error:", error);
-      return;
-    }
-
-    // Sobald Supabase OK -> UI sofort updaten
-    setUserData((prev) => ({ ...prev, [editField]: value }));
-
-    setIsEditModalOpen(false);
-  };
-
+  const handleSaveEdit = (value: string) => {
+    updateProfileField(editField as keyof typeof userData, value)
+    closeModal()
+  }
 
   const handleImageUpload = (imageUrl: string) => {
-    setUserData({ ...userData, avatarUrl: imageUrl })
-  }
-
-  const handleToggleSetting = (key: string, value: boolean) => {
-    setSettings({ ...settings, [key]: value })
-  }
-
-  const router = useRouter()
-
-  const handleNavigate = (screen: string) => {
-    router.push(screen as Href)
+    updateAvatar(imageUrl)
   }
 
   const handleDeleteAccount = () => {
     console.log('Account deleted')
-    setIsDeleteModalOpen(false)
+    closeModal()
   }
 
-  const infoItems = [
-    { label: 'Full Name', value: userData.fullName, field: 'fullName' },
-    { label: 'Age', value: userData.age, field: 'age' },
-    { label: 'Gender', value: userData.gender, field: 'gender' },
-    {
-      label: 'Distance from Campus',
-      value: userData.distance,
-      field: 'distance',
-    },
-    {
-      label: 'Primary Transport Mode',
-      value: userData.transport,
-      field: 'transport',
-    },
-  ]
+  const infoCategories: InfoCategory[] = useMemo(
+    () => [
+      {
+        id: 'personal',
+        title: 'Personal',
+        icon: 'user',
+        items: [
+          { label: 'Full Name', value: userData.fullName, field: 'fullName' },
+          { label: 'Age', value: userData.age, field: 'age' },
+          { label: 'Gender', value: userData.gender, field: 'gender' },
+        ],
+      },
+      {
+        id: 'campus',
+        title: 'Campus',
+        icon: 'book',
+        items: [
+          {
+            label: 'University',
+            value: userData.university,
+            field: 'university',
+          },
+          {
+            label: 'Distance from Campus',
+            value: userData.distance,
+            field: 'distance',
+          },
+        ],
+      },
+      {
+        id: 'preferences',
+        title: 'Preferences',
+        icon: 'sliders',
+        items: [
+          {
+            label: 'Primary Transport Mode',
+            value: userData.transport,
+            field: 'transport',
+          },
+        ],
+      },
+    ],
+    [userData]
+  )
+
+  const quickActions = useMemo(
+    () => [
+      {
+        id: 'log',
+        label: 'Log Action',
+        icon: 'plus-circle' as const,
+        isPrimary: true,
+        onPress: () => console.log('Log action'),
+      },
+      {
+        id: 'history',
+        label: 'History',
+        icon: 'clock' as const,
+        onPress: () => router.push('/(tabs)/personal-progress' as Href),
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        icon: 'settings' as const,
+        onPress: () => router.push('/profile/settings' as Href),
+      },
+    ],
+    [router]
+  )
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F6F9F2' }}>
-      
-      {/* 🔹 Background Pattern – exactly like in WelcomeScreen */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          opacity: 0.08,
-          zIndex: 0,
-        }}
-        pointerEvents="none"
-      >
-        <BackgroundPattern
-          width="100%"
-          height="100%"
-          color={Colors.primary}
-          preserveAspectRatio="xMidYMid slice"
-        />
-      </View>
-
-
-      {/* 🔹 Main Content */}
+    <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingBottom: 0, 
-        }}
-        automaticallyAdjustContentInsets={false}
-        contentInsetAdjustmentBehavior="never"
-        keyboardShouldPersistTaps="handled"
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <ProfileHeader
+          onBack={() => router.back()}
+          onSettings={() => router.push('/profile/settings' as Href)}
+          onEdit={() => handleEditField('fullName', userData.fullName)}
+          onAvatarClick={() => openModal('imageUpload')}
+          userName={userData.userName}
+          university={userData.university}
+          ecoLevel={userData.ecoLevel}
+          ecoLevelInfo={userData.ecoLevelInfo}
+          avatarUrl={userData.avatarUrl}
+        />
 
-        <YStack
-          {...({
-            width: '100%',
-            maxWidth: 600, 
-            alignSelf: 'center',
-            gap: '$4',
-            minHeight: '100%',
-            paddingBottom: 0
-          } as any)}
-        >
-          {/* 🔹 Profilkopf mit Bild, Name, evtl. Bearbeiten-Button */}
-          <ProfileHeader
-            onBack={() => console.log('Back')}
-            onSettings={() => router.push('/profile/settings' as const)}
-            onEdit={() => handleEditField('fullName', userData.fullName)}
-            onAvatarClick={() => setIsImageUploadOpen(true)}
-            userName={userData.userName}
-            university={userData.university}
-            ecoLevel={userData.ecoLevel}
-            avatarUrl={userData.avatarUrl}
-          />
+        <ImpactCard
+          stats={impactStats}
+          onViewProgress={() =>
+            router.push('/(tabs)/personal-progress' as Href)
+          }
+        />
 
-          {/* 🔹 Übersicht mit allgemeinen Infos (z. B. Name, E-Mail, etc.) */}
-          <InfoList items={infoItems} onEditField={handleEditField} />
+        <QuickActions actions={quickActions} />
 
-          {/* 🔹 Kleine Zusammenfassung, z. B. Punkte, Fortschritt */}
-          <ImpactCard
-            co2Saved='42 kg'
-            actionsLogged='156'
-            leaderboardRank='#12 in TU Munich'
-            progressValue={75}
-            onViewProgress={() =>
-              router.push('/(tabs)/personal-progress' as const)
-            }
-          />
+        <InfoList categories={infoCategories} onEditField={handleEditField} />
 
-          {/* 🔹 Modals (werden nur angezeigt, wenn aktiv) */}
-          <ProfileImageUploadDialog
-            isOpen={isImageUploadOpen}
-            onClose={() => setIsImageUploadOpen(false)}
-            onUpload={handleImageUpload}
-            currentImage={userData.avatarUrl}
-          />
-
-          <EditModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            field={editField}
-            currentValue={editValue}
-            onSave={handleSaveEdit}
-          />
-
-          <DeleteAccountModal
-            isOpen={isDeleteModalOpen}
-            onClose={() => setIsDeleteModalOpen(false)}
-            onConfirm={handleDeleteAccount}
-          />
-        </YStack>
+        <View style={styles.bottomPadding} />
       </ScrollView>
+
+      {/* Modals */}
+      <EditModal
+        isOpen={activeModal === 'editProfile'}
+        onClose={closeModal}
+        field={editField}
+        currentValue={editValue}
+        onSave={handleSaveEdit}
+      />
+
+      <ProfileImageUploadDialog
+        isOpen={activeModal === 'imageUpload'}
+        onClose={closeModal}
+        onUpload={handleImageUpload}
+        currentImage={userData.avatarUrl}
+      />
+
+      <DeleteAccountModal
+        isOpen={activeModal === 'deleteAccount'}
+        onClose={closeModal}
+        onConfirm={handleDeleteAccount}
+      />
     </SafeAreaView>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  bottomPadding: {
+    height: 100,
+  },
+})

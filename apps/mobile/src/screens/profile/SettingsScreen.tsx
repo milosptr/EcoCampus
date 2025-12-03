@@ -1,65 +1,156 @@
-import React, { useState } from 'react'
-import { Modal, TouchableOpacity } from 'react-native'
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native'
+import { MotiView } from 'moti'
 import { Feather } from '@expo/vector-icons'
-import { YStack, XStack, Text, Button, ScrollView } from 'tamagui'
 import { useRouter } from 'expo-router'
-
+import { Colors } from '@/src/constants/Colors'
+import { ModalWrapper } from '@/src/components'
+import { useSettings } from '@/src/hooks/useSettings'
+import { useModalManager } from '@/src/hooks/useModalManager'
 import { SettingsList } from './components/SettingsList'
 import { signOut } from '@/src/lib/signOut'
 
-import { EditEmailPage } from './subpages/EditEmailPage'
-import { FAQPage } from './subpages/FAQPage'
-import { LanguagePage } from './subpages/LanguagePage'
-import { UnitsPage } from './subpages/UnitsPage'
-import { ContactSupportPage } from './subpages/ContactSupportPage'
-import { supabase } from '@/src/lib/supabase'
+// Simple placeholder pages for modals
+function EditEmailPage() {
+  return (
+    <View style={modalPageStyles.container}>
+      <Text style={modalPageStyles.text}>
+        Email editing functionality coming soon.
+      </Text>
+    </View>
+  )
+}
+
+function FAQPage() {
+  return (
+    <View style={modalPageStyles.container}>
+      <Text style={modalPageStyles.title}>Frequently Asked Questions</Text>
+      <Text style={modalPageStyles.text}>
+        Q: How do I track my eco actions?{'\n'}
+        A: Use the dashboard to log your daily sustainable activities.
+      </Text>
+      <Text style={modalPageStyles.text}>
+        Q: How are points calculated?{'\n'}
+        A: Points are based on CO2 savings from research data.
+      </Text>
+    </View>
+  )
+}
+
+function LanguagePage({
+  currentLanguage,
+  onSelect,
+}: {
+  currentLanguage: string
+  onSelect: (lang: string) => void
+}) {
+  const languages = ['English', 'Deutsch', 'Español', 'Français']
+  return (
+    <View style={modalPageStyles.container}>
+      {languages.map((lang) => (
+        <Pressable
+          key={lang}
+          onPress={() => onSelect(lang)}
+          style={({ pressed }) => [
+            modalPageStyles.option,
+            currentLanguage === lang && modalPageStyles.optionSelected,
+            pressed && modalPageStyles.optionPressed,
+          ]}
+        >
+          <Text
+            style={[
+              modalPageStyles.optionText,
+              currentLanguage === lang && modalPageStyles.optionTextSelected,
+            ]}
+          >
+            {lang}
+          </Text>
+          {currentLanguage === lang && (
+            <Feather name="check" size={18} color={Colors.primary} />
+          )}
+        </Pressable>
+      ))}
+    </View>
+  )
+}
+
+function UnitsPage({
+  currentUnit,
+  onSelect,
+}: {
+  currentUnit: string
+  onSelect: (unit: string) => void
+}) {
+  const units = ['Metric (km)', 'Imperial (mi)']
+  return (
+    <View style={modalPageStyles.container}>
+      {units.map((unit) => (
+        <Pressable
+          key={unit}
+          onPress={() => onSelect(unit)}
+          style={({ pressed }) => [
+            modalPageStyles.option,
+            currentUnit === unit && modalPageStyles.optionSelected,
+            pressed && modalPageStyles.optionPressed,
+          ]}
+        >
+          <Text
+            style={[
+              modalPageStyles.optionText,
+              currentUnit === unit && modalPageStyles.optionTextSelected,
+            ]}
+          >
+            {unit}
+          </Text>
+          {currentUnit === unit && (
+            <Feather name="check" size={18} color={Colors.primary} />
+          )}
+        </Pressable>
+      ))}
+    </View>
+  )
+}
+
+function ContactSupportPage() {
+  return (
+    <View style={modalPageStyles.container}>
+      <Text style={modalPageStyles.text}>
+        For support, please email us at:{'\n'}
+        support@ecocampus.app
+      </Text>
+    </View>
+  )
+}
 
 export default function SettingsScreen() {
   const router = useRouter()
-
-
-  const [showEditEmail, setShowEditEmail] = useState(false)
-  const [showSupport, setShowSupport] = useState(false)
-  const [showUnits, setShowUnits] = useState(false)
-  const [showLanguage, setShowLanguage] = useState(false)
-  const [showFAQ, setShowFAQ] = useState(false)
-
-  
-  const [settings, setSettings] = useState({
-    dailyReminders: true,
-    weeklyReports: false,
-    leaderboardUpdates: true,
-    dataSharing: false,
-    analyticsTracking: true,
-  })
-
-  const [unitSystem, setUnitSystem] = useState('Metric (km)')
-  const [language, setLanguage] = useState('English')
-
-  const handleToggle = (key: string, value: boolean) => {
-    setSettings((prev) => ({ ...prev, [key]: value }))
-  }
+  const { settings, toggleSetting, unitSystem, setUnitSystem, language, setLanguage } =
+    useSettings()
+  const { activeModal, openModal, closeModal } = useModalManager()
 
   const handleNavigate = (screen: string) => {
     switch (screen) {
       case 'edit-email':
-        setShowEditEmail(true)
+        openModal('editEmail')
         break
       case 'support':
-        setShowSupport(true)
+        openModal('support')
         break
       case 'units':
-        setShowUnits(true)
+        openModal('units')
         break
       case 'language':
-        setShowLanguage(true)
+        openModal('language')
         break
       case 'faq':
-        setShowFAQ(true)
+        openModal('faq')
         break
       default:
         console.warn('Unknown settings target:', screen)
     }
+  }
+
+  const handleToggle = (key: string, _value: boolean) => {
+    toggleSetting(key as keyof typeof settings)
   }
 
   const handleSignOut = () => signOut()
@@ -71,166 +162,36 @@ export default function SettingsScreen() {
 
   const handleBack = () => router.back()
 
-  const ModalWrapper = ({
-    visible,
-    title,
-    onClose,
-    children,
-  }: {
-    visible: boolean
-    title: string
-    onClose: () => void
-    children: React.ReactNode
-  }) => (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <YStack
-        {...{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'rgba(0,0,0,0.3)',
-        }}
-      >
-        <YStack
-          {...{
-            width: '90%',
-            maxHeight: '80%',
-            backgroundColor: 'white',
-            borderRadius: '$6',
-            padding: '$4',
-          }}
-        >
-          {/* Header */}
-          <XStack
-            {...{
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '$3',
-            }}
-          >
-            <Text
-              {...{
-                fontSize: '$6',
-                fontWeight: '600',
-                color: '#5F7E68',
-              }}
-            >
-              {title}
-            </Text>
-
-            <TouchableOpacity onPress={onClose}>
-              <Feather name="x" size={22} color="#5F7E68" />
-            </TouchableOpacity>
-          </XStack>
-
-          {/* Content */}
-          <ScrollView>{children}</ScrollView>
-        </YStack>
-      </YStack>
-    </Modal>
-  )
-
   return (
-    <YStack {...{ flex: 1, backgroundColor: '#F6F9F2' }}>
-      {/* -------- Header -------- */}
-      <YStack
-        {...{
-          backgroundColor: 'white',
-          shadowColor: '$shadowColor',
-          shadowOpacity: 0.05,
-          shadowRadius: 10,
-        }}
+    <View style={styles.container}>
+      {/* Header */}
+      <MotiView
+        from={{ translateY: -20, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        transition={{ type: 'timing', duration: 500 }}
       >
-        <XStack
-          {...{
-            alignItems: 'center',
-            paddingHorizontal: '$4',
-            paddingVertical: '$4',
-            paddingTop: '$10',
-          }}
-        >
-          <Button
-            circular
-            size="$4"
+        <View style={styles.header}>
+          <Pressable
             onPress={handleBack}
-            {...{
-              backgroundColor: 'transparent',
-              pressStyle: { opacity: 0.8 },
-            }}
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && styles.backButtonPressed,
+            ]}
           >
-            <Feather name="chevron-left" size={20} color="#5F7E68" />
-          </Button>
+            <Feather name="chevron-left" size={20} color={Colors.primary} />
+          </Pressable>
 
-          <Text
-            {...{
-              flex: 1,
-              textAlign: 'center',
-              fontSize: '$7',
-              fontWeight: '600',
-              color: '#5F7E68',
-            }}
-          >
-            Settings
-          </Text>
+          <Text style={styles.headerTitle}>Settings</Text>
 
-          <YStack {...{ width: 40 }} />
-        </XStack>
-      </YStack>
+          <View style={styles.headerSpacer} />
+        </View>
+      </MotiView>
 
-      {/* -------- Modals (Subpages) -------- */}
-
-      <ModalWrapper
-        visible={showEditEmail}
-        title="Edit Email"
-        onClose={() => setShowEditEmail(false)}
+      {/* Content */}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
       >
-        <EditEmailPage
-          currentEmail={''}
-          onSave={async (newEmail: string) => {
-            try {
-              const { error } = await supabase.auth.updateUser({ email: newEmail })
-
-              if (error) {
-                console.error("Error updating email:", error)
-                return
-              }
-
-              // Popup schließen
-              setShowEditEmail(false)
-
-              // Optional: Erfolgsmeldung
-              console.log("Email updated successfully:", newEmail)
-
-            } catch (err) {
-              console.error("Unexpected error updating email:", err)
-            }
-          }}
-        />
-      </ModalWrapper>
-
-      <ModalWrapper visible={showSupport} title="Contact Support" onClose={() => setShowSupport(false)}>
-        <ContactSupportPage />
-      </ModalWrapper>
-
-      <ModalWrapper visible={showUnits} title="Units" onClose={() => setShowUnits(false)}>
-        <UnitsPage currentUnit={''} onSelect={function (unit: string): void {
-          throw new Error('Function not implemented.')
-        } } />
-      </ModalWrapper>
-
-      <ModalWrapper visible={showLanguage} title="Language" onClose={() => setShowLanguage(false)}>
-        <LanguagePage currentLanguage={''} onSelect={function (language: string): void {
-          throw new Error('Function not implemented.')
-        } } />
-      </ModalWrapper>
-
-      <ModalWrapper visible={showFAQ} title="FAQ" onClose={() => setShowFAQ(false)}>
-        <FAQPage />
-      </ModalWrapper>
-
-      {/* -------- Settings Content -------- */}
-
-      <ScrollView>
         <SettingsList
           settings={settings}
           unitSystem={unitSystem}
@@ -240,55 +201,189 @@ export default function SettingsScreen() {
         />
 
         {/* Footer Actions */}
-        <YStack
-          {...{
-            marginHorizontal: '$4',
-            marginBottom: '$8',
-            gap: '$3',
-          }}
+        <MotiView
+          from={{ translateY: 30, opacity: 0 }}
+          animate={{ translateY: 0, opacity: 1 }}
+          transition={{ type: 'timing', duration: 500, delay: 700 }}
+          style={styles.footerActions}
         >
-          <Button
+          <Pressable
             onPress={handleSignOut}
-            {...{
-              borderRadius: '$6',
-              height: 48,
-              backgroundColor: 'transparent',
-              borderWidth: 1,
-              borderColor: '#EA715B',
-              pressStyle: { opacity: 0.8 },
-            }}
+            style={({ pressed }) => [
+              styles.signOutButton,
+              pressed && styles.buttonPressed,
+            ]}
           >
-            <Text
-              {...{
-                color: '#EA715B',
-                fontSize: '$4',
-                fontWeight: '600',
-              }}
-            >
-              Sign Out
-            </Text>
-          </Button>
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
+          </Pressable>
 
-          <TouchableOpacity onPress={handleDeleteAccount}>
-            <YStack
-              {...{
-                width: '100%',
-                alignItems: 'center',
-                paddingVertical: '$2',
-              }}
-            >
-              <Text
-                {...{
-                  fontSize: '$2',
-                  color: '#EA715B',
-                }}
-              >
-                Delete Account
-              </Text>
-            </YStack>
-          </TouchableOpacity>
-        </YStack>
+          <Pressable onPress={handleDeleteAccount}>
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </Pressable>
+        </MotiView>
       </ScrollView>
-    </YStack>
+
+      {/* Modals */}
+      <ModalWrapper
+        visible={activeModal === 'editEmail'}
+        title="Edit Email"
+        onClose={closeModal}
+      >
+        <EditEmailPage />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'support'}
+        title="Contact Support"
+        onClose={closeModal}
+      >
+        <ContactSupportPage />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'units'}
+        title="Units"
+        onClose={closeModal}
+      >
+        <UnitsPage
+          currentUnit={unitSystem}
+          onSelect={(unit) => {
+            setUnitSystem(unit)
+            closeModal()
+          }}
+        />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'language'}
+        title="Language"
+        onClose={closeModal}
+      >
+        <LanguagePage
+          currentLanguage={language}
+          onSelect={(lang) => {
+            setLanguage(lang)
+            closeModal()
+          }}
+        />
+      </ModalWrapper>
+
+      <ModalWrapper
+        visible={activeModal === 'faq'}
+        title="FAQ"
+        onClose={closeModal}
+      >
+        <FAQPage />
+      </ModalWrapper>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    backgroundColor: Colors.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingTop: 60,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonPressed: {
+    opacity: 0.8,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.primary,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  footerActions: {
+    marginHorizontal: 16,
+    marginBottom: 32,
+    gap: 12,
+  },
+  signOutButton: {
+    borderRadius: 12,
+    height: 48,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  signOutButtonText: {
+    color: Colors.error,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  deleteAccountText: {
+    fontSize: 13,
+    color: Colors.error,
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+})
+
+const modalPageStyles = StyleSheet.create({
+  container: {
+    paddingVertical: 8,
+    gap: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: 8,
+  },
+  text: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+  },
+  optionSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  optionPressed: {
+    opacity: 0.7,
+  },
+  optionText: {
+    fontSize: 15,
+    color: Colors.text,
+  },
+  optionTextSelected: {
+    color: Colors.primary,
+    fontWeight: '500',
+  },
+})

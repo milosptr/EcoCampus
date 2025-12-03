@@ -5,7 +5,7 @@ import { Colors } from '@/src/constants/Colors'
 interface CardProps {
   children: ReactNode
   style?: ViewStyle | ViewStyle[]
-  variant?: 'default' | 'selected' | 'info'
+  variant?: 'default' | 'selected' | 'info' | 'highlight'
 }
 
 export function Card({ children, style, variant = 'default' }: CardProps) {
@@ -15,6 +15,7 @@ export function Card({ children, style, variant = 'default' }: CardProps) {
         styles.card,
         variant === 'selected' && styles.cardSelected,
         variant === 'info' && styles.cardInfo,
+        variant === 'highlight' && styles.cardHighlight,
         style,
       ]}
     >
@@ -38,5 +39,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.infoLight,
     backgroundColor: Colors.infoLight,
+  },
+  cardHighlight: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
   },
 })

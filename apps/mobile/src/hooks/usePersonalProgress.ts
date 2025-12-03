@@ -1,0 +1,295 @@
+import { useMemo } from 'react'
+import { useMainStore } from '@/src/store/useMainStore'
+import {
+  ACTION_CO2_VALUES,
+  co2ToPoints,
+  pointsToCo2,
+} from '@/src/constants/actions'
+
+export interface EcoLevel {
+  level: number
+  title: string
+  minPoints: number
+  maxPoints: number
+}
+
+export const ECO_LEVELS: EcoLevel[] = [
+  { level: 1, title: 'Beginner', minPoints: 0, maxPoints: 100 },
+  { level: 2, title: 'Learner', minPoints: 100, maxPoints: 300 },
+  { level: 3, title: 'Warrior', minPoints: 300, maxPoints: 600 },
+  { level: 4, title: 'Hero', minPoints: 600, maxPoints: 1000 },
+  { level: 5, title: 'Legend', minPoints: 1000, maxPoints: Infinity },
+]
+
+export interface UserProgress {
+  name: string
+  avatarUrl?: string
+  currentLevel: EcoLevel
+  totalPoints: number
+  pointsToNextLevel: number
+  progressPercent: number
+  co2Saved: number
+  actionsThisWeek: number
+  streak: number
+}
+
+export interface MonthlyData {
+  labels: string[]
+  values: number[]
+}
+
+export interface RecentAction {
+  id: string
+  icon: 'bike' | 'zap' | 'trash-2' | 'droplet' | 'sun' | 'shopping-bag'
+  title: string
+  points: number
+  timestamp: string
+  category: string
+}
+
+export interface Achievement {
+  id: string
+  title: string
+  description: string
+  icon: string
+  unlocked: boolean
+  progress?: number
+  maxProgress?: number
+  category: 'beginner' | 'consistency' | 'impact' | 'community'
+}
+
+export interface WeeklyChallenge {
+  id: string
+  title: string
+  description: string
+  icon: 'target' | 'zap' | 'award'
+  progress: number
+  target: number
+  reward: number
+  daysRemaining: number
+  accepted: boolean
+}
+
+export interface PersonalProgressData {
+  user: UserProgress
+  monthlyData: MonthlyData
+  recentActions: RecentAction[]
+  achievements: Achievement[]
+  weeklyChallenge: WeeklyChallenge
+}
+
+const getEcoLevel = (points: number): EcoLevel => {
+  return (
+    ECO_LEVELS.find(
+      (level) => points >= level.minPoints && points < level.maxPoints
+    ) || ECO_LEVELS[0]
+  )
+}
+
+const createMockProgressData = (userName: string): PersonalProgressData => {
+  const totalPoints = 450
+  const currentLevel = getEcoLevel(totalPoints)
+  const nextLevel = ECO_LEVELS.find((l) => l.level === currentLevel.level + 1)
+  const pointsInLevel = totalPoints - currentLevel.minPoints
+  const levelRange =
+    (nextLevel?.minPoints || currentLevel.maxPoints) - currentLevel.minPoints
+  const progressPercent = Math.round((pointsInLevel / levelRange) * 100)
+
+  const user: UserProgress = {
+    name: userName || 'Guest User',
+    currentLevel,
+    totalPoints,
+    pointsToNextLevel: nextLevel ? nextLevel.minPoints - totalPoints : 0,
+    progressPercent,
+    co2Saved: pointsToCo2(totalPoints),
+    actionsThisWeek: 18,
+    streak: 7,
+  }
+
+  const monthlyData: MonthlyData = {
+    labels: [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ],
+    values: [3.2, 4.1, 2.8, 5.0, 6.3, 5.5, 4.9, 3.7, 4.5, 5.2, 6.0, 4.8],
+  }
+
+  const recentActions: RecentAction[] = [
+    {
+      id: '1',
+      icon: 'bike',
+      title: 'Biked to campus',
+      points: co2ToPoints(ACTION_CO2_VALUES.BIKE_PER_KM * 5), // 5km from profile
+      timestamp: '2 hours ago',
+      category: 'Transport',
+    },
+    {
+      id: '2',
+      icon: 'sun',
+      title: 'Ate vegetarian dish',
+      points: co2ToPoints(ACTION_CO2_VALUES.VEGETARIAN_DISH),
+      timestamp: '4 hours ago',
+      category: 'Food',
+    },
+    {
+      id: '3',
+      icon: 'shopping-bag',
+      title: 'Bought secondhand textbook',
+      points: co2ToPoints(ACTION_CO2_VALUES.SECONDHAND_ITEM),
+      timestamp: '5 hours ago',
+      category: 'Shopping',
+    },
+    {
+      id: '4',
+      icon: 'droplet',
+      title: 'Shorter shower (5 min)',
+      points: co2ToPoints(ACTION_CO2_VALUES.SHOWER_PER_MIN * 5), // 5 minutes saved
+      timestamp: 'Yesterday',
+      category: 'Water',
+    },
+    {
+      id: '5',
+      icon: 'trash-2',
+      title: 'Recycled plastic bottles',
+      points: co2ToPoints(ACTION_CO2_VALUES.RECYCLING_PER_WEEK / 7), // Daily average
+      timestamp: 'Yesterday',
+      category: 'Waste',
+    },
+    {
+      id: '6',
+      icon: 'zap',
+      title: 'Shut off devices overnight',
+      points: co2ToPoints(ACTION_CO2_VALUES.DEVICE_OFF_PER_HOUR * 8), // 8 hours
+      timestamp: '2 days ago',
+      category: 'Energy',
+    },
+    {
+      id: '7',
+      icon: 'shopping-bag',
+      title: 'Used reusable cup',
+      points: co2ToPoints(ACTION_CO2_VALUES.REUSABLE_CUP),
+      timestamp: '2 days ago',
+      category: 'Waste',
+    },
+    {
+      id: '8',
+      icon: 'bike',
+      title: 'Walked to class',
+      points: co2ToPoints(ACTION_CO2_VALUES.WALK_PER_KM * 2), // 2km walk
+      timestamp: '3 days ago',
+      category: 'Transport',
+    },
+  ]
+
+  const achievements: Achievement[] = [
+    {
+      id: 'a1',
+      title: 'First Steps',
+      description: 'Complete your first eco action',
+      icon: '🌱',
+      unlocked: true,
+      category: 'beginner',
+    },
+    {
+      id: 'a2',
+      title: 'Week Warrior',
+      description: 'Log actions for 7 days straight',
+      icon: '🔥',
+      unlocked: true,
+      category: 'consistency',
+    },
+    {
+      id: 'a3',
+      title: 'Carbon Cutter',
+      description: 'Save 10kg of CO2',
+      icon: '🌍',
+      unlocked: true,
+      category: 'impact',
+    },
+    {
+      id: 'a4',
+      title: 'Team Player',
+      description: 'Join a campus challenge',
+      icon: '🤝',
+      unlocked: false,
+      progress: 0,
+      maxProgress: 1,
+      category: 'community',
+    },
+    {
+      id: 'a5',
+      title: 'Eco Expert',
+      description: 'Reach Level 5',
+      icon: '⭐',
+      unlocked: false,
+      progress: 3,
+      maxProgress: 5,
+      category: 'impact',
+    },
+    {
+      id: 'a6',
+      title: 'Month Master',
+      description: 'Log actions for 30 days',
+      icon: '📅',
+      unlocked: false,
+      progress: 12,
+      maxProgress: 30,
+      category: 'consistency',
+    },
+  ]
+
+  const weeklyChallenge: WeeklyChallenge = {
+    id: 'wc1',
+    title: 'Bike Week',
+    description: 'Use bicycle for transport 5 times this week',
+    icon: 'target',
+    progress: 3,
+    target: 5,
+    reward: 50,
+    daysRemaining: 3,
+    accepted: true,
+  }
+
+  return {
+    user,
+    monthlyData,
+    recentActions,
+    achievements,
+    weeklyChallenge,
+  }
+}
+
+interface UsePersonalProgressReturn {
+  data: PersonalProgressData
+  loading: boolean
+}
+
+export function usePersonalProgress(): UsePersonalProgressReturn {
+  const userProfile = useMainStore((state) => state.userProfile)
+
+  const displayName = useMemo(() => {
+    if (userProfile?.name && userProfile.name.trim().length > 0) {
+      return userProfile.name
+    }
+    return 'Guest User'
+  }, [userProfile])
+
+  const data = useMemo(() => {
+    return createMockProgressData(displayName)
+  }, [displayName])
+
+  return {
+    data,
+    loading: false,
+  }
+}

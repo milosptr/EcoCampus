@@ -1,479 +1,226 @@
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { Text, XStack, YStack } from 'tamagui'
+import { useState } from 'react'
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native'
+import { MotiView } from 'moti'
 import { Feather } from '@expo/vector-icons'
+import { SafeAreaScreen } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
-import { SafeAreaScreen, Card } from '@/src/components'
-import { trpc } from '@/src/trpc'
-import { useMainStore } from '@/src/store/useMainStore'
+import { useLeaderboard } from '@/src/hooks/useLeaderboard'
+import { TopPerformersCard } from './components/TopPerformersCard'
+import { YourRankCard } from './components/YourRankCard'
+import { RankingsCard } from './components/RankingsCard'
+import { UniversityRankingsCard } from './components/UniversityRankingsCard'
 
-type LeaderboardResponse = {
-  periodLabel: string
-  topPerformers: {
-    rank: number
-    name: string
-    initials: string
-    university: string
-    points: number
-  }[]
-  yourRank: {
-    rank: number
-    name: string
-    university: string
-    points: number
-    ecoLevel: string
-  }
-  rankings: {
-    rank: number
-    name: string
-    university: string
-    points: number
-  }[]
-}
-
-const createGuestLeaderboardData = (): LeaderboardResponse => {
-  const rankings = [
-    { rank: 1, name: 'Baby Doe', university: 'THWS', points: 2847 },
-    { rank: 2, name: 'Janie Doe', university: 'THWS', points: 2634 },
-    { rank: 3, name: 'Johnny Doe', university: 'TUM', points: 2521 },
-    { rank: 4, name: 'John Doe', university: 'THWS', points: 2398 },
-    { rank: 5, name: 'Jane Doe', university: 'THWS', points: 2156 },
-    { rank: 6, name: 'Noah Davis', university: 'LMU', points: 2043 },
-    { rank: 7, name: 'Sophia Miller', university: 'THWS', points: 1987 },
-    { rank: 8, name: 'Liam Johnson', university: 'TUM', points: 1876 },
-    { rank: 9, name: 'Ava Martinez', university: 'LMU', points: 1754 },
-    { rank: 10, name: 'Ethan Garcia', university: 'THWS', points: 1698 },
-  ]
-
-  const topPerformers = rankings.slice(0, 3).map((entry) => ({
-    rank: entry.rank,
-    name: entry.name,
-    initials: entry.name
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join(''),
-    university: entry.university,
-    points: entry.points,
-  }))
-
-  const yourRank = {
-    ...rankings[4],
-    ecoLevel: 'Eco Level 3',
-  }
-
-  return {
-    periodLabel: 'Demo Month',
-    topPerformers,
-    yourRank,
-    rankings,
-  }
-}
+type TabType = 'students' | 'universities'
 
 export default function LeaderboardScreen() {
-  const userProfile = useMainStore((state) => state.userProfile)
+  const { data, loading, displayName } = useLeaderboard()
+  const [activeTab, setActiveTab] = useState<TabType>('students')
 
-  const isGuest =
-    userProfile?.email === 'john.doe@example.com' && userProfile.authId === '1'
-
-  const guestData = isGuest ? createGuestLeaderboardData() : null
-
-  const { data, isLoading, error } = trpc.leaderboard.studentMonthly.useQuery(
-    undefined,
-    {
-      enabled: !isGuest,
-    }
-  )
-
-  const effectiveData = (
-    isGuest ? guestData : data
-  ) as LeaderboardResponse | null
-  const showLoading = !effectiveData && isLoading && !isGuest
-  const showError = !isGuest && error && !isLoading
-
-  const displayName =
-    userProfile?.name && userProfile.name.trim().length > 0
-      ? userProfile.name
-      : 'Guest User'
+  if (loading) {
+    return (
+      <SafeAreaScreen style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading leaderboard...</Text>
+        </View>
+      </SafeAreaScreen>
+    )
+  }
 
   return (
-    <SafeAreaScreen>
-      <View style={styles.headerContainer}>
-        <YStack {...({ gap: 4 } as any)}>
-          <Text
-            {...({
-              fontSize: 20,
-              fontWeight: '600',
-            } as any)}
-          >
-            Leaderboard
-          </Text>
-          <Text
-            {...({
-              fontSize: 14,
-            } as any)}
-          >
-            {data?.periodLabel ?? 'This Month'}
-          </Text>
-        </YStack>
-        <View style={styles.headerIconWrapper}>
-          <Feather name='calendar' size={20} color={Colors.primary} />
+    <SafeAreaScreen style={styles.container}>
+      {/* Header */}
+      <MotiView
+        from={{ translateY: -20, opacity: 0 }}
+        animate={{ translateY: 0, opacity: 1 }}
+        transition={{ type: 'timing', duration: 500 }}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>Leaderboard</Text>
+            <View style={styles.periodBadge}>
+              <Text style={styles.periodText}>{data.periodLabel}</Text>
+            </View>
+          </View>
+          <View style={styles.headerIconWrapper}>
+            <Feather name="calendar" size={20} color={Colors.primary} />
+          </View>
         </View>
-      </View>
+      </MotiView>
 
+      {/* Tab Switcher */}
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 400, delay: 100 }}
+        style={styles.tabContainer}
+      >
+        <View style={styles.tabWrapper}>
+          <TabButton
+            label="Students"
+            isActive={activeTab === 'students'}
+            onPress={() => setActiveTab('students')}
+          />
+          <TabButton
+            label="Universities"
+            isActive={activeTab === 'universities'}
+            onPress={() => setActiveTab('universities')}
+          />
+          {/* Animated indicator */}
+          <MotiView
+            animate={{
+              translateX: activeTab === 'students' ? 0 : '100%',
+            }}
+            transition={{ type: 'timing', duration: 200 }}
+            style={styles.tabIndicator}
+          />
+        </View>
+      </MotiView>
+
+      {/* Content */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {showLoading && (
-          <Text
-            {...({
-              alignSelf: 'center',
-              marginTop: 24,
-              color: Colors.textSecondary,
-            } as any)}
-          >
-            Loading leaderboard...
-          </Text>
-        )}
-
-        {showError && (
-          <Text
-            {...({
-              alignSelf: 'center',
-              marginTop: 24,
-              color: Colors.error,
-            } as any)}
-          >
-            Could not load leaderboard. Please try again.
-          </Text>
-        )}
-
-        {effectiveData && (
-          <YStack {...({ gap: 24 } as any)}>
-            {/* Top Performers */}
-            <Card style={styles.cardSection}>
-              <Text
-                {...({
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: Colors.primary,
-                  marginBottom: 16,
-                } as any)}
-              >
-                Top Performers
-              </Text>
-
-              <XStack
-                {...({
-                  justifyContent: 'space-between',
-                  marginBottom: 12,
-                } as any)}
-              >
-                {effectiveData.topPerformers.map((entry) => (
-                  <YStack
-                    key={entry.rank}
-                    {...({
-                      alignItems: 'center',
-                      gap: 8,
-                    } as any)}
-                  >
-                    <View
-                      style={[
-                        styles.topBadge,
-                        entry.rank === 1 && styles.topBadgeFirst,
-                        entry.rank === 2 && styles.topBadgeSecond,
-                        entry.rank === 3 && styles.topBadgeThird,
-                      ]}
-                    >
-                      <Text
-                        {...({
-                          fontSize: 16,
-                          fontWeight: '600',
-                          color: entry.rank === 2 ? Colors.text : Colors.white,
-                        } as any)}
-                      >
-                        {entry.initials}
-                      </Text>
-                    </View>
-                    <Text
-                      {...({
-                        fontSize: 12,
-                        color: Colors.textSecondary,
-                      } as any)}
-                    >
-                      {entry.rank === 1 && '1st'}
-                      {entry.rank === 2 && '2nd'}
-                      {entry.rank === 3 && '3rd'}
-                    </Text>
-                  </YStack>
-                ))}
-              </XStack>
-
-              {effectiveData.rankings.slice(0, 3).map((entry) => (
-                <View key={entry.rank} style={styles.listRow}>
-                  <Text
-                    {...({ fontSize: 14, color: Colors.textSecondary } as any)}
-                  >
-                    {entry.rank}
-                  </Text>
-                  <YStack {...({ flex: 1, marginLeft: 12 } as any)}>
-                    <Text
-                      {...({
-                        fontSize: 15,
-                        fontWeight: '500',
-                        color: Colors.primary,
-                      } as any)}
-                    >
-                      {entry.name}
-                    </Text>
-                    <Text
-                      {...({
-                        fontSize: 12,
-                        color: Colors.textSecondary,
-                      } as any)}
-                    >
-                      {entry.university}
-                    </Text>
-                  </YStack>
-                  <Text
-                    {...({
-                      fontSize: 15,
-                      fontWeight: '500',
-                      color: Colors.primary,
-                    } as any)}
-                  >
-                    {entry.points} pts
-                  </Text>
-                </View>
-              ))}
-            </Card>
-
-            {/* Your Rank */}
-            <Card style={styles.cardSection}>
-              <Text
-                {...({
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: Colors.primary,
-                  marginBottom: 16,
-                } as any)}
-              >
-                Your Rank
-              </Text>
-
-              <XStack {...({ alignItems: 'center', gap: 16 } as any)}>
-                <View style={styles.yourRankBadge}>
-                  <Text
-                    {...({
-                      fontSize: 18,
-                      fontWeight: '600',
-                      color: Colors.primary,
-                    } as any)}
-                  >
-                    {effectiveData.yourRank.rank}
-                  </Text>
-                </View>
-
-                <YStack {...({ flex: 1 } as any)}>
-                  <Text
-                    {...({
-                      fontSize: 16,
-                      fontWeight: '600',
-                      color: Colors.primary,
-                    } as any)}
-                  >
-                    {displayName}
-                  </Text>
-                  <Text
-                    {...({ fontSize: 12, color: Colors.textSecondary } as any)}
-                  >
-                    {effectiveData.yourRank.university}
-                  </Text>
-                </YStack>
-
-                <YStack {...({ alignItems: 'flex-end', gap: 8 } as any)}>
-                  <Text
-                    {...({
-                      fontSize: 16,
-                      fontWeight: '600',
-                      color: Colors.primary,
-                    } as any)}
-                  >
-                    {effectiveData.yourRank.points} pts
-                  </Text>
-                  <View style={styles.ecoLevelPill}>
-                    <Text
-                      {...({
-                        fontSize: 11,
-                        fontWeight: '500',
-                        color: Colors.primary,
-                      } as any)}
-                    >
-                      {effectiveData.yourRank.ecoLevel}
-                    </Text>
-                  </View>
-                </YStack>
-              </XStack>
-            </Card>
-
-            {/* All Rankings */}
-            <Card style={styles.cardSection}>
-              <Text
-                {...({
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: Colors.primary,
-                  marginBottom: 16,
-                } as any)}
-              >
-                All Rankings
-              </Text>
-
-              <YStack {...({ gap: 8 } as any)}>
-                {effectiveData.rankings.map((entry) => (
-                  <View
-                    key={entry.rank}
-                    style={[
-                      styles.listRow,
-                      entry.rank === effectiveData.yourRank.rank &&
-                        styles.listRowHighlighted,
-                    ]}
-                  >
-                    <View style={styles.rankCircle}>
-                      <Text
-                        {...({
-                          fontSize: 13,
-                          fontWeight: '500',
-                          color: Colors.textSecondary,
-                        } as any)}
-                      >
-                        {entry.rank}
-                      </Text>
-                    </View>
-                    <YStack {...({ flex: 1, marginLeft: 12 } as any)}>
-                      <Text
-                        {...({
-                          fontSize: 15,
-                          fontWeight: '500',
-                          color: Colors.primary,
-                        } as any)}
-                      >
-                        {entry.name}
-                      </Text>
-                      <Text
-                        {...({
-                          fontSize: 12,
-                          color: Colors.textSecondary,
-                        } as any)}
-                      >
-                        {entry.university}
-                      </Text>
-                    </YStack>
-                    <Text
-                      {...({
-                        fontSize: 15,
-                        fontWeight: '500',
-                        color: Colors.primary,
-                      } as any)}
-                    >
-                      {entry.points} pts
-                    </Text>
-                  </View>
-                ))}
-              </YStack>
-            </Card>
-          </YStack>
+        {activeTab === 'students' ? (
+          <>
+            <TopPerformersCard topPerformers={data.topPerformers} />
+            <YourRankCard yourRank={data.yourRank} displayName={displayName} />
+            <RankingsCard
+              rankings={data.rankings}
+              currentUserRank={data.yourRank.rank}
+            />
+          </>
+        ) : (
+          <UniversityRankingsCard rankings={data.universityRankings} />
         )}
       </ScrollView>
     </SafeAreaScreen>
   )
 }
 
+interface TabButtonProps {
+  label: string
+  isActive: boolean
+  onPress: () => void
+}
+
+function TabButton({ label, isActive, onPress }: TabButtonProps) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.tabButton,
+        pressed && styles.tabButtonPressed,
+      ]}
+    >
+      <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+        {label}
+      </Text>
+    </Pressable>
+  )
+}
+
 const styles = StyleSheet.create({
-  headerContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+  header: {
     paddingHorizontal: 24,
     paddingTop: 18,
-    paddingBottom: 18,
+    paddingBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+  },
+  headerTextContainer: {
+    gap: 8,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text,
+  },
+  periodBadge: {
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  periodText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary,
   },
   headerIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tabContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+  },
+  tabWrapper: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 4,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  tabButtonPressed: {
+    opacity: 0.7,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.textSecondary,
+  },
+  tabLabelActive: {
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  tabIndicator: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: '50%',
+    height: '100%',
+    backgroundColor: Colors.primaryLight,
+    borderRadius: 8,
+    marginRight: 4,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
-    gap: 24,
-  },
-  cardSection: {
-    padding: 20,
-    backgroundColor: Colors.white,
-  },
-  topBadge: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.secondaryLight,
-  },
-  topBadgeFirst: {
-    backgroundColor: Colors.tertiary,
-  },
-  topBadgeSecond: {
-    backgroundColor: '#E0E2E6',
-  },
-  topBadgeThird: {
-    backgroundColor: Colors.tertiaryMedium,
-  },
-  listRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  listRowHighlighted: {
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.primaryLight,
-  },
-  yourRankBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.white,
-  },
-  ecoLevelPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: Colors.tertiaryLight,
-  },
-  rankCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.backgroundMuted,
+    paddingTop: 12,
+    paddingBottom: 120,
+    gap: 16,
   },
 })
