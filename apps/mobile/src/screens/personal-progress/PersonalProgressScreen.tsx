@@ -1,11 +1,23 @@
-import { View, Text, ScrollView, Pressable, StyleSheet, Dimensions } from 'react-native'
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { MotiView } from 'moti'
 import { Feather } from '@expo/vector-icons'
 import { LineChart } from 'react-native-chart-kit'
 import { Card, CircularProgress, CircularProgressLabel } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
-import { usePersonalProgress, type RecentAction, type Achievement, type WeeklyChallenge } from '@/src/hooks/usePersonalProgress'
+import {
+  usePersonalProgress,
+  type RecentAction,
+  type Achievement,
+  type WeeklyChallenge,
+} from '@/src/hooks/usePersonalProgress'
 
 const screenWidth = Dimensions.get('window').width
 
@@ -66,7 +78,11 @@ export default function PersonalProgressScreen() {
 }
 
 // Hero Card Component
-function HeroCard({ user }: { user: ReturnType<typeof usePersonalProgress>['data']['user'] }) {
+function HeroCard({
+  user,
+}: {
+  user: ReturnType<typeof usePersonalProgress>['data']['user']
+}) {
   return (
     <MotiView
       from={{ scale: 0.95, opacity: 0 }}
@@ -91,7 +107,8 @@ function HeroCard({ user }: { user: ReturnType<typeof usePersonalProgress>['data
             <Text style={styles.heroPoints}>{user.totalPoints} pts</Text>
             {user.pointsToNextLevel > 0 && (
               <Text style={styles.heroNextLevel}>
-                {user.pointsToNextLevel} pts to {user.currentLevel.title === 'Legend' ? 'max' : 'next level'}
+                {user.pointsToNextLevel} pts to{' '}
+                {user.currentLevel.title === 'Legend' ? 'max' : 'next level'}
               </Text>
             )}
           </View>
@@ -102,7 +119,11 @@ function HeroCard({ user }: { user: ReturnType<typeof usePersonalProgress>['data
 }
 
 // Stats Row Component
-function StatsRow({ user }: { user: ReturnType<typeof usePersonalProgress>['data']['user'] }) {
+function StatsRow({
+  user,
+}: {
+  user: ReturnType<typeof usePersonalProgress>['data']['user']
+}) {
   return (
     <MotiView
       from={{ translateY: 20, opacity: 0 }}
@@ -111,22 +132,22 @@ function StatsRow({ user }: { user: ReturnType<typeof usePersonalProgress>['data
     >
       <View style={styles.statsRow}>
         <StatBox
-          icon="feather"
-          value={`${user.co2Saved}`}
-          unit="kg"
-          label="CO2 Saved"
+          icon='feather'
+          value={`${user.co2Saved.toFixed(2)}`}
+          unit='kg'
+          label='CO₂ Saved Today'
           iconColor={Colors.primary}
         />
         <StatBox
-          icon="check-circle"
+          icon='check-circle'
           value={`${user.actionsThisWeek}`}
-          label="This Week"
+          label='This Week'
           iconColor={Colors.success}
         />
         <StatBox
-          icon="zap"
+          icon='zap'
           value={`${user.streak}`}
-          label="Day Streak"
+          label='Day Streak'
           iconColor={Colors.tertiaryDark}
           highlight={user.streak >= 7}
         />
@@ -152,7 +173,12 @@ function StatBox({
 }) {
   return (
     <View style={[styles.statBox, highlight && styles.statBoxHighlight]}>
-      <View style={[styles.statIconContainer, { backgroundColor: iconColor + '15' }]}>
+      <View
+        style={[
+          styles.statIconContainer,
+          { backgroundColor: iconColor + '15' },
+        ]}
+      >
         <Feather name={icon} size={16} color={iconColor} />
       </View>
       <View style={styles.statValueRow}>
@@ -165,7 +191,11 @@ function StatBox({
 }
 
 // Chart Section Component
-function ChartSection({ monthlyData }: { monthlyData: ReturnType<typeof usePersonalProgress>['data']['monthlyData'] }) {
+function ChartSection({
+  monthlyData,
+}: {
+  monthlyData: ReturnType<typeof usePersonalProgress>['data']['monthlyData']
+}) {
   return (
     <MotiView
       from={{ translateY: 20, opacity: 0 }}
@@ -186,7 +216,7 @@ function ChartSection({ monthlyData }: { monthlyData: ReturnType<typeof usePerso
             }}
             width={screenWidth * 1.4}
             height={180}
-            yAxisSuffix="kg"
+            yAxisSuffix='kg'
             fromZero
             chartConfig={{
               backgroundColor: Colors.white,
@@ -229,7 +259,7 @@ function RecentActionsSection({ actions }: { actions: RecentAction[] }) {
           <Text style={styles.sectionTitle}>Recent Actions</Text>
           <Pressable style={styles.seeAllButton}>
             <Text style={styles.seeAllText}>See all</Text>
-            <Feather name="chevron-right" size={14} color={Colors.primary} />
+            <Feather name='chevron-right' size={14} color={Colors.primary} />
           </Pressable>
         </View>
 
@@ -243,13 +273,22 @@ function RecentActionsSection({ actions }: { actions: RecentAction[] }) {
   )
 }
 
-function ActionItem({ action, index }: { action: RecentAction; index: number }) {
-  const iconMap: Record<RecentAction['icon'], React.ComponentProps<typeof Feather>['name']> = {
-    'bike': 'navigation',
-    'zap': 'zap',
+function ActionItem({
+  action,
+  index,
+}: {
+  action: RecentAction
+  index: number
+}) {
+  const iconMap: Record<
+    RecentAction['icon'],
+    React.ComponentProps<typeof Feather>['name']
+  > = {
+    bike: 'navigation',
+    zap: 'zap',
     'trash-2': 'trash-2',
-    'droplet': 'droplet',
-    'sun': 'sun',
+    droplet: 'droplet',
+    sun: 'sun',
     'shopping-bag': 'shopping-bag',
   }
 
@@ -261,7 +300,11 @@ function ActionItem({ action, index }: { action: RecentAction; index: number }) 
     >
       <View style={styles.actionItem}>
         <View style={styles.actionIcon}>
-          <Feather name={iconMap[action.icon]} size={16} color={Colors.primary} />
+          <Feather
+            name={iconMap[action.icon]}
+            size={16}
+            color={Colors.primary}
+          />
         </View>
         <View style={styles.actionInfo}>
           <Text style={styles.actionTitle}>{action.title}</Text>
@@ -289,11 +332,13 @@ function ChallengeSection({ challenge }: { challenge: WeeklyChallenge }) {
       <Card style={styles.challengeCard}>
         <View style={styles.challengeHeader}>
           <View style={styles.challengeIconContainer}>
-            <Feather name="target" size={20} color={Colors.primary} />
+            <Feather name='target' size={20} color={Colors.primary} />
           </View>
           <View style={styles.challengeInfo}>
             <Text style={styles.challengeTitle}>{challenge.title}</Text>
-            <Text style={styles.challengeDescription}>{challenge.description}</Text>
+            <Text style={styles.challengeDescription}>
+              {challenge.description}
+            </Text>
           </View>
           <View style={styles.challengeReward}>
             <Text style={styles.rewardValue}>+{challenge.reward}</Text>
@@ -325,7 +370,11 @@ function ChallengeSection({ challenge }: { challenge: WeeklyChallenge }) {
 }
 
 // Achievements Section
-function AchievementsSection({ achievements }: { achievements: Achievement[] }) {
+function AchievementsSection({
+  achievements,
+}: {
+  achievements: Achievement[]
+}) {
   return (
     <MotiView
       from={{ translateY: 20, opacity: 0 }}
@@ -337,13 +386,17 @@ function AchievementsSection({ achievements }: { achievements: Achievement[] }) 
           <Text style={styles.sectionTitle}>Achievements</Text>
           <Pressable style={styles.seeAllButton}>
             <Text style={styles.seeAllText}>See all</Text>
-            <Feather name="chevron-right" size={14} color={Colors.primary} />
+            <Feather name='chevron-right' size={14} color={Colors.primary} />
           </Pressable>
         </View>
 
         <View style={styles.achievementsGrid}>
           {achievements.slice(0, 6).map((achievement, index) => (
-            <AchievementBadge key={achievement.id} achievement={achievement} index={index} />
+            <AchievementBadge
+              key={achievement.id}
+              achievement={achievement}
+              index={index}
+            />
           ))}
         </View>
       </Card>
@@ -351,22 +404,36 @@ function AchievementsSection({ achievements }: { achievements: Achievement[] }) 
   )
 }
 
-function AchievementBadge({ achievement, index }: { achievement: Achievement; index: number }) {
+function AchievementBadge({
+  achievement,
+  index,
+}: {
+  achievement: Achievement
+  index: number
+}) {
   return (
     <MotiView
       from={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'timing', duration: 300, delay: 650 + index * 50 }}
     >
-      <View style={[styles.achievementBadge, !achievement.unlocked && styles.achievementLocked]}>
+      <View
+        style={[
+          styles.achievementBadge,
+          !achievement.unlocked && styles.achievementLocked,
+        ]}
+      >
         <Text style={styles.achievementIcon}>{achievement.icon}</Text>
         {!achievement.unlocked && (
           <View style={styles.lockOverlay}>
-            <Feather name="lock" size={12} color={Colors.textMuted} />
+            <Feather name='lock' size={12} color={Colors.textMuted} />
           </View>
         )}
         <Text
-          style={[styles.achievementTitle, !achievement.unlocked && styles.achievementTitleLocked]}
+          style={[
+            styles.achievementTitle,
+            !achievement.unlocked && styles.achievementTitleLocked,
+          ]}
           numberOfLines={1}
         >
           {achievement.title}

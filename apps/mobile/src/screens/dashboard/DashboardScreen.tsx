@@ -13,8 +13,13 @@ import { Feather } from '@expo/vector-icons'
 import { Card, CircularProgress, CircularProgressLabel } from '@/src/components'
 import { Colors } from '@/src/constants/Colors'
 import { useMainStore } from '@/src/store/useMainStore'
+import { useProgressStore } from '@/src/store/useProgressStore'
 import { usePersonalProgress } from '@/src/hooks/usePersonalProgress'
-import { ACTION_CO2_VALUES } from '@/src/constants/actions'
+import {
+  ACTION_CO2_VALUES,
+  co2ToPoints,
+  AVAILABLE_ACTIONS,
+} from '@/src/constants/actions'
 
 type Action = {
   id?: string | number
@@ -24,13 +29,14 @@ type Action = {
 }
 
 const getKgSavedFromTitle = (title: string): number => {
-  if (title.includes('Bicycle')) return ACTION_CO2_VALUES.BIKE_PER_KM
+  if (title.includes('Turning lights off'))
+    return ACTION_CO2_VALUES.LIGHTS_OFF_PER_HOUR
   if (title.includes('Walking')) return ACTION_CO2_VALUES.WALK_PER_KM
+  if (title.includes('Shorter showers')) return ACTION_CO2_VALUES.SHOWER_PER_MIN
   if (title.includes('Dish without red meat'))
     return ACTION_CO2_VALUES.VEGETARIAN_DISH
   if (title.includes('Buying secondhand'))
     return ACTION_CO2_VALUES.SECONDHAND_ITEM
-  if (title.includes('Shorter showers')) return ACTION_CO2_VALUES.SHOWER_PER_MIN
   if (title.includes('Recycling'))
     return ACTION_CO2_VALUES.RECYCLING_PER_WEEK / 7
   if (title.includes('Shutting off devices'))
@@ -41,41 +47,51 @@ const getKgSavedFromTitle = (title: string): number => {
 
 export default function DashboardScreen() {
   const userProfile = useMainStore((s) => s.userProfile)
+  const addCompletedAction = useProgressStore((s) => s.addCompletedAction)
+  const removeCompletedAction = useProgressStore((s) => s.removeCompletedAction)
+  const storeTotalPoints = useProgressStore((s) => s.totalPoints)
+  const storeTotalCo2Saved = useProgressStore((s) => s.totalCo2Saved)
+  const storeActionsThisWeek = useProgressStore((s) => s.actionsThisWeek)
+  const completedActions = useProgressStore((s) => s.completedActions)
 
   const { data: personalData, loading: _loading } = usePersonalProgress()
 
-  // Always use the hook data - it has proper CO2 values
-  const displayActions = personalData?.recentActions?.slice(0, 3) || []
+  const levelProgress = personalData?.user?.progressPercent ?? 0
+
+  // Use available actions for tasks
+  const displayActions = AVAILABLE_ACTIONS.slice(0, 3)
 
   // Ensure displayActions always have kgSaved values
   const actionsWithKgSaved = displayActions.map((action) => ({
     ...action,
-    kgSaved: getKgSavedFromTitle(action.title),
+    kgSaved: action.kgSaved,
   }))
 
-  const [completed, setCompleted] = useState<boolean[]>(
-    new Array(displayActions.length).fill(false)
-  )
   const [showCongrats, setShowCongrats] = useState(false)
   const congratsScaleRef = useRef(new Animated.Value(0))
   const scaleRefs = useRef<Animated.Value[]>([])
 
   useEffect(() => {
-    setCompleted(new Array(displayActions.length).fill(false))
     scaleRefs.current.length = 0
     for (let i = 0; i < displayActions.length; i++)
       scaleRefs.current.push(new Animated.Value(1))
   }, [displayActions.length])
 
-  const completedCount = completed.filter(Boolean).length
+  const today = new Date().toDateString()
+  const completedCount = displayActions.filter((action) =>
+    completedActions.some((a) => a.title === action.title)
+  ).length
 
-  // Calculate CO₂ saved from completed tasks
-  const co2SavedFromTasks = completed.reduce((sum, isCompleted, i) => {
-    if (isCompleted && actionsWithKgSaved[i]) {
-      return sum + actionsWithKgSaved[i].kgSaved
-    }
-    return sum
-  }, 0)
+  // Calculate CO₂ saved from completed tasks today
+  const co2SavedFromTasks = displayActions
+    .filter((action) =>
+      completedActions.some(
+        (a) =>
+          a.title === action.title &&
+          new Date(a.timestamp).toDateString() === today
+      )
+    )
+    .reduce((sum, action) => sum + action.kgSaved, 0)
 
   // Filter actions from today
   const todaysActions =
@@ -92,38 +108,17 @@ export default function DashboardScreen() {
       0
     ) + co2SavedFromTasks
 
-  const totalPoints = 450
-  const level = 3
-  const baselineCo2 = personalData?.user?.co2Saved ?? 0
-  const totalCo2Saved = baselineCo2 + co2SavedFromTasks
-  const baselineActionsThisWeek = personalData?.user?.actionsThisWeek ?? 23
-  const totalActionsThisWeek = baselineActionsThisWeek + completedCount
+  // Use store values for totals
+  const totalPoints = storeTotalPoints
+  const rawProgress = Math.min(100, (totalPoints / 1000) * 100)
+  const level = personalData?.user?.currentLevel?.level ?? 1
+  const progress = levelProgress
+  const title = personalData?.user?.currentLevel?.title ?? 'Beginner'
+  const totalCo2Saved = storeTotalCo2Saved
+  const totalActionsThisWeek = storeActionsThisWeek
 
   const isAllCompleted =
     completedCount === displayActions.length && displayActions.length > 0
-
-  // Debug logging
-  useEffect(() => {
-    console.log('Dashboard Stats:', {
-      completedCount,
-      displayActionsLength: displayActions.length,
-      actionsWithKgSaved: actionsWithKgSaved.map((a) => ({
-        title: a.title,
-        kgSaved: a.kgSaved,
-      })),
-      completed,
-      co2SavedFromTasks,
-      todaysActions: todaysActions.map((a) => ({
-        title: a.title,
-        kgSaved: getKgSavedFromTitle(a.title),
-      })),
-      co2SavedToday,
-      baselineCo2,
-      totalCo2Saved,
-      totalActionsThisWeek,
-      isAllCompleted,
-    })
-  }, [completed, displayActions.length])
 
   useEffect(() => {
     if (isAllCompleted) {
@@ -171,12 +166,12 @@ export default function DashboardScreen() {
           <Card style={styles.heroCard}>
             <View style={styles.heroContent}>
               <CircularProgress
-                progress={0.5}
+                progress={progress}
                 size={120}
                 strokeWidth={12}
                 progressColor={Colors.primary}
               >
-                <CircularProgressLabel level={`LVL ${level}`} title='warrior' />
+                <CircularProgressLabel level={`LVL ${level}`} title={title} />
               </CircularProgress>
               <View style={styles.heroInfo}>
                 <RNText style={styles.heroPoints}>{totalPoints} pts</RNText>
@@ -210,7 +205,9 @@ export default function DashboardScreen() {
               <Feather name='target' size={18} color={Colors.primary} />
               <RNText style={styles.statValue}>
                 {Math.round(
-                  (completedCount / Math.max(1, displayActions.length)) * 100
+                  (totalActionsThisWeek /
+                    (personalData?.user?.weeklyGoal ?? 18)) *
+                    100
                 )}
                 %
               </RNText>
@@ -245,10 +242,12 @@ export default function DashboardScreen() {
             </View>
 
             {displayActions.map((action, i) => {
-              const isCompleted = completed[i] || false
+              const isCompleted = completedActions.some(
+                (a) => a.title === action.title
+              )
               return (
                 <Animated.View
-                  key={action.id ?? i}
+                  key={action.id}
                   style={{
                     transform: [
                       { scale: scaleRefs.current[i] ?? new Animated.Value(1) },
@@ -263,11 +262,15 @@ export default function DashboardScreen() {
                         : styles.taskItemPending,
                     ]}
                     onPress={() => {
-                      const copy = [...completed]
-                      const will = !copy[i]
-                      copy[i] = will
-                      setCompleted(copy)
-                      if (will) {
+                      if (!isCompleted) {
+                        // Persist the completed action
+                        addCompletedAction({
+                          title: action.title,
+                          points: co2ToPoints(action.kgSaved),
+                          co2Saved: action.kgSaved,
+                          category: action.category,
+                        })
+
                         const ref = (scaleRefs.current[i] ??
                           new Animated.Value(1)) as Animated.Value
                         Animated.sequence([
@@ -283,6 +286,9 @@ export default function DashboardScreen() {
                             useNativeDriver: false,
                           }),
                         ]).start()
+                      } else {
+                        // Remove the completed action
+                        removeCompletedAction(action.title)
                       }
                     }}
                   >
@@ -301,11 +307,9 @@ export default function DashboardScreen() {
                         >
                           {action.title}
                         </RNText>
-                        {actionsWithKgSaved[i].kgSaved !== undefined && (
-                          <RNText style={styles.emissionText}>
-                            {actionsWithKgSaved[i].kgSaved} kg CO₂
-                          </RNText>
-                        )}
+                        <RNText style={styles.emissionText}>
+                          {action.kgSaved} kg CO₂
+                        </RNText>
                       </View>
                     </View>
                     {isCompleted && (
@@ -334,7 +338,7 @@ export default function DashboardScreen() {
               You completed all tasks!
             </RNText>
             <RNText style={styles.congratsCo2}>
-              {co2SavedFromTasks.toFixed(2)} kg CO₂ saved
+              {completedCount * 50} points earned
             </RNText>
             <TouchableOpacity
               style={styles.congratsDismissBtn}

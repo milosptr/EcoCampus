@@ -24,6 +24,8 @@ export const trpcClient = trpc.createClient({
     httpBatchLink({
       url: `${API_URL}/trpc`,
       transformer: superjson,
+      // Force GET requests by setting a high maxURLLength
+      maxURLLength: 10000,
       async headers() {
         const {
           data: { session },

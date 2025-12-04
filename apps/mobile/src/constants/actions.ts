@@ -36,7 +36,7 @@ export const CO2_TO_POINTS_RATIO = 100
  * Helper function to convert CO2 saved (kg) to points
  */
 export const co2ToPoints = (co2Kg: number): number => {
-  return Math.round(co2Kg * CO2_TO_POINTS_RATIO)
+  return 50 // Fixed 50 points per action
 }
 
 /**
@@ -45,3 +45,57 @@ export const co2ToPoints = (co2Kg: number): number => {
 export const pointsToCo2 = (points: number): number => {
   return Math.round((points / CO2_TO_POINTS_RATIO) * 10) / 10
 }
+
+/**
+ * Available actions for users to complete
+ */
+export const AVAILABLE_ACTIONS = [
+  {
+    id: 'lights',
+    title: 'Turning lights off',
+    kgSaved: ACTION_CO2_VALUES.LIGHTS_OFF_PER_HOUR,
+    category: 'Energy',
+  },
+  {
+    id: 'walk',
+    title: 'Walking to school',
+    kgSaved: ACTION_CO2_VALUES.WALK_PER_KM,
+    category: 'Transport',
+  },
+  {
+    id: 'shower',
+    title: 'Shorter showers',
+    kgSaved: 0.5,
+    category: 'Water',
+  },
+  {
+    id: 'vegetarian',
+    title: 'Dish without red meat',
+    kgSaved: 0.5,
+    category: 'Food',
+  },
+  {
+    id: 'secondhand',
+    title: 'Buying secondhand',
+    kgSaved: ACTION_CO2_VALUES.SECONDHAND_ITEM,
+    category: 'Shopping',
+  },
+  {
+    id: 'recycling',
+    title: 'Recycling',
+    kgSaved: ACTION_CO2_VALUES.RECYCLING_PER_WEEK / 7,
+    category: 'Waste',
+  },
+  {
+    id: 'device_off',
+    title: 'Shutting off devices',
+    kgSaved: ACTION_CO2_VALUES.DEVICE_OFF_PER_HOUR,
+    category: 'Energy',
+  },
+  {
+    id: 'reusable_cup',
+    title: 'Reusable flask/cup',
+    kgSaved: ACTION_CO2_VALUES.REUSABLE_CUP,
+    category: 'Waste',
+  },
+]
